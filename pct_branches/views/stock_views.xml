@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================ -->
+    <!-- stock.warehouse Form View -->
+    <!-- ============================================================ -->
+    <record id="view_warehouse_branch" model="ir.ui.view">
+        <field name="name">stock.warehouse.form.branch</field>
+        <field name="model">stock.warehouse</field>
+        <field name="inherit_id" ref="stock.view_warehouse"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="branch_id" options="{'no_create': True}"/>
+                <field name="bank_information" widget="html"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- stock.picking Form View -->
+    <!-- ============================================================ -->
+    <record id="view_picking_form_branch" model="ir.ui.view">
+        <field name="name">stock.picking.form.branch</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='picking_type_id']" position="after">
+                <field name="branch_id" options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- stock.picking List View -->
+    <!-- ============================================================ -->
+    <record id="vpicktree_branch" model="ir.ui.view">
+        <field name="name">stock.picking.tree.branch</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="branch_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- stock.location Form View -->
+    <!-- ============================================================ -->
+    <record id="view_location_form_branch" model="ir.ui.view">
+        <field name="name">stock.location.form.branch</field>
+        <field name="model">stock.location</field>
+        <field name="inherit_id" ref="stock.view_location_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='usage']" position="after">
+                <field name="branch_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- stock.scrap Form View -->
+    <!-- ============================================================ -->
+    <record id="stock_scrap_form_view_branch" model="ir.ui.view">
+        <field name="name">stock.scrap.form.branch</field>
+        <field name="model">stock.scrap</field>
+        <field name="inherit_id" ref="stock.stock_scrap_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="branch_id" options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

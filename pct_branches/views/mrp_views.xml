@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================ -->
+    <!-- mrp.production Form View -->
+    <!-- ============================================================ -->
+    <record id="mrp_production_form_view_branch" model="ir.ui.view">
+        <field name="name">mrp.production.form.branch</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="branch_id" options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- mrp.production List View -->
+    <!-- ============================================================ -->
+    <record id="mrp_production_tree_view_branch" model="ir.ui.view">
+        <field name="name">mrp.production.tree.branch</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="branch_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- mrp.bom Form View -->
+    <!-- ============================================================ -->
+    <record id="mrp_bom_form_view_branch" model="ir.ui.view">
+        <field name="name">mrp.bom.form.branch</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="branch_id" options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- mrp.workcenter Form View -->
+    <!-- ============================================================ -->
+    <record id="mrp_workcenter_view_branch" model="ir.ui.view">
+        <field name="name">mrp.workcenter.form.branch</field>
+        <field name="model">mrp.workcenter</field>
+        <field name="inherit_id" ref="mrp.mrp_workcenter_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="branch_id" options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- mrp.unbuild Form View -->
+    <!-- ============================================================ -->
+    <record id="mrp_unbuild_form_view_branch" model="ir.ui.view">
+        <field name="name">mrp.unbuild.form.branch</field>
+        <field name="model">mrp.unbuild</field>
+        <field name="inherit_id" ref="mrp.mrp_unbuild_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="branch_id" options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

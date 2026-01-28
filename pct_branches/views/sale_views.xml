@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================ -->
+    <!-- sale.order Form View -->
+    <!-- ============================================================ -->
+    <record id="view_order_form_branch" model="ir.ui.view">
+        <field name="name">sale.order.form.branch</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form[1]/sheet[1]/notebook[1]/page[@name='other_information']/group[1]/group[@name='sale_shipping']/field[@name='warehouse_id'][2]"
+                   position="after">
+                <field name="branch_id"
+                       readonly="1"
+                       force_save="1"
+                       options="{
+                           'no_open': True,
+                           'no_create': True,
+                           'no_create_edit': True,
+                           'no_quick_create': True
+                       }"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- sale.order List View -->
+    <!-- ============================================================ -->
+    <record id="view_order_tree_branch" model="ir.ui.view">
+        <field name="name">sale.order.tree.branch</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="branch_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+    
+</odoo>

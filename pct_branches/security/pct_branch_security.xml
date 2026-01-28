@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ============================================================ -->
+        <!-- Module Category -->
+        <!-- ============================================================ -->
+        <record id="module_category_branch_management" model="ir.module.category">
+            <field name="name">Branch Management</field>
+            <field name="description">Manage organizational branches</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Security Groups -->
+        <!-- ============================================================ -->
+        <record id="group_branch_user" model="res.groups">
+            <field name="name">Branch User</field>
+            <field name="category_id" ref="module_category_branch_management"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Users can view and operate only within their assigned branches.</field>
+        </record>
+
+        <record id="group_branch_manager" model="res.groups">
+            <field name="name">Branch Manager</field>
+            <field name="category_id" ref="module_category_branch_management"/>
+            <!-- IMPORTANT: do NOT imply group_branch_user, otherwise manager also gets user record rules (AND) -->
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+            <field name="comment">Managers can view and manage all branches and records across the system.</field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: res.branch -->
+        <!-- ============================================================ -->
+        <record id="branch_rule_manager" model="ir.rule">
+            <field name="name">Branch: Manager sees all</field>
+            <field name="model_id" ref="model_res_branch"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <record id="branch_rule_user" model="ir.rule">
+            <field name="name">Branch: User sees allowed branches</field>
+            <field name="model_id" ref="model_res_branch"/>
+            <field name="domain_force">[('id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_user'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: sale.order (Override Default Odoo Rules) -->
+        <!-- ============================================================ -->
+        <!-- Override default Personal Orders rule to include branch filtering -->
+        <record id="sale.sale_order_personal_rule" model="ir.rule">
+            <field name="name">Personal Orders</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="domain_force">['|', '&amp;', '|', ('branch_id', 'in', branch_ids), ('branch_id', '=', False), ('user_id', '=', user.id), ('user_id', '=', False)]</field>
+            <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+        </record>
+
+        <!-- Override default All Orders rule to include branch filtering -->
+        <record id="sale.sale_order_see_all" model="ir.rule">
+            <field name="name">All Orders</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman_all_leads'))]"/>
+        </record>
+
+        <!-- Branch Manager sees all sale orders -->
+        <record id="sale_order_rule_manager" model="ir.rule">
+            <field name="name">Sale Order: Branch Manager sees all</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: purchase.order -->
+        <!-- ============================================================ -->
+        <record id="purchase_order_rule_manager" model="ir.rule">
+            <field name="name">Purchase Order: Manager sees all</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <record id="purchase_order_rule_user" model="ir.rule">
+            <field name="name">Purchase Order: User sees allowed branches</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_user'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: account.move (Override Default Odoo Rules) -->
+        <!-- ============================================================ -->
+        <!-- Override default "All Journal Entries" rule to include branch filtering -->
+        <record id="account.account_move_see_all" model="ir.rule">
+            <field name="name">All Journal Entries</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('account.group_account_invoice'))]"/>
+        </record>
+
+        <!-- Override default readonly rule to include branch filtering -->
+        <record id="account.account_move_rule_group_readonly" model="ir.rule">
+            <field name="name">Readonly Move</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('account.group_account_readonly'))]"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Override default invoice group rule to include branch filtering -->
+        <record id="account.account_move_rule_group_invoice" model="ir.rule">
+            <field name="name">Readonly Move</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('account.group_account_invoice'))]"/>
+        </record>
+
+        <!-- Override default sales personal invoice rule to include branch filtering -->
+        <record id="sale.account_invoice_rule_see_personal" model="ir.rule">
+            <field name="name">Personal Invoices</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">['&amp;','&amp;','|',('branch_id','=',False),('branch_id','in',branch_ids),('move_type','in',('out_invoice','out_refund')),'|',('invoice_user_id','=',user.id),('invoice_user_id','=',False)]</field>
+            <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+        </record>
+
+        <!-- Override default sales all invoice rule to include branch filtering -->
+        <record id="sale.account_invoice_rule_see_all" model="ir.rule">
+            <field name="name">All Invoices</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">['&amp;', '|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids), ('move_type', 'in', ('out_invoice', 'out_refund'))]</field>
+            <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman_all_leads'))]"/>
+        </record>
+
+        <!-- Override default Purchase User Account Move rule to include branch filtering -->
+        <record id="purchase.purchase_user_account_move_rule" model="ir.rule">
+            <field name="name">Purchase User Account Move</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">['&amp;', '|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids), ('move_type', 'in', ('in_invoice', 'in_refund', 'in_receipt'))]</field>
+            <field name="groups" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+        </record>
+
+        <!-- Override default Invoice POS User rule to include branch filtering -->
+        <record id="point_of_sale.rule_invoice_pos_user" model="ir.rule">
+            <field name="name">Invoice POS User</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">['&amp;', '|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids), ('pos_order_ids', '!=', False)]</field>
+            <field name="groups" eval="[(4, ref('point_of_sale.group_pos_user'))]"/>
+        </record>
+
+        <!-- Override default Expense Team Approver Account Move rule to include branch filtering -->
+        <record id="hr_expense.hr_expense_team_approver_account_move_rule" model="ir.rule">
+            <field name="name">Expense Team Approver Account Move</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">['&amp;', '|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids), ('line_ids.expense_id', '!=', False)]</field>
+            <field name="groups" eval="[(4, ref('hr_expense.group_hr_expense_team_approver'))]"/>
+        </record>
+
+        <!-- Branch Manager sees all journal entries -->
+        <record id="account_move_rule_manager" model="ir.rule">
+            <field name="name">Branch Manager sees all</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: account.payment -->
+        <!-- ============================================================ -->
+        <record id="account_payment_rule_manager" model="ir.rule">
+            <field name="name">Payment: Manager sees all</field>
+            <field name="model_id" ref="account.model_account_payment"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <record id="account_payment_rule_user" model="ir.rule">
+            <field name="name">Payment: User sees allowed branches</field>
+            <field name="model_id" ref="account.model_account_payment"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_user'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: stock.picking -->
+        <!-- ============================================================ -->
+        <record id="stock_picking_rule_manager" model="ir.rule">
+            <field name="name">Stock Picking: Manager sees all</field>
+            <field name="model_id" ref="stock.model_stock_picking"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <record id="stock_picking_rule_user" model="ir.rule">
+            <field name="name">Stock Picking: User sees allowed branches</field>
+            <field name="model_id" ref="stock.model_stock_picking"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_user'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: stock.picking.type -->
+        <!-- ============================================================ -->
+        <record id="stock_picking_type_rule_manager" model="ir.rule">
+            <field name="name">Picking Type: Manager sees all</field>
+            <field name="model_id" ref="stock.model_stock_picking_type"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <record id="stock_picking_type_rule_user" model="ir.rule">
+            <field name="name">Picking Type: User sees allowed branches</field>
+            <field name="model_id" ref="stock.model_stock_picking_type"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_user'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: stock.warehouse -->
+        <!-- ============================================================ -->
+        <record id="stock_warehouse_rule_manager" model="ir.rule">
+            <field name="name">Warehouse: Manager sees all</field>
+            <field name="model_id" ref="stock.model_stock_warehouse"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <record id="stock_warehouse_rule_user" model="ir.rule">
+            <field name="name">Warehouse: User sees allowed branches</field>
+            <field name="model_id" ref="stock.model_stock_warehouse"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_user'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: stock.location -->
+        <!-- ============================================================ -->
+        <record id="stock_location_rule_manager" model="ir.rule">
+            <field name="name">Location: Manager sees all</field>
+            <field name="model_id" ref="stock.model_stock_location"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <record id="stock_location_rule_user" model="ir.rule">
+            <field name="name">Location: User sees allowed branches</field>
+            <field name="model_id" ref="stock.model_stock_location"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_user'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: stock.quant -->
+        <!-- ============================================================ -->
+        <record id="stock_quant_rule_manager" model="ir.rule">
+            <field name="name">Stock Quant: Manager sees all</field>
+            <field name="model_id" ref="stock.model_stock_quant"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <record id="stock_quant_rule_user" model="ir.rule">
+            <field name="name">Stock Quant: User sees allowed branches</field>
+            <field name="model_id" ref="stock.model_stock_quant"/>
+            <field name="domain_force">['|', ('location_id.branch_id', '=', False), ('location_id.branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_user'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: stock.move.line -->
+        <!-- ============================================================ -->
+        <record id="stock_move_line_rule_manager" model="ir.rule">
+            <field name="name">Stock Move Line: Manager sees all</field>
+            <field name="model_id" ref="stock.model_stock_move_line"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <record id="stock_move_line_rule_user" model="ir.rule">
+            <field name="name">Stock Move Line: User sees allowed branches</field>
+            <field name="model_id" ref="stock.model_stock_move_line"/>
+            <field name="domain_force">['|', ('location_dest_id.branch_id', '=', False), ('location_dest_id.branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_user'))]"/>
+        </record>
+
+
+        <!-- ============================================================ -->
+        <!-- Record Rules: product.pricelist -->
+        <!-- ============================================================ -->
+        <record id="product_pricelist_rule_manager" model="ir.rule">
+            <field name="name">Pricelist: Manager sees all</field>
+            <field name="model_id" ref="product.model_product_pricelist"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_manager'))]"/>
+        </record>
+
+        <record id="product_pricelist_rule_user" model="ir.rule">
+            <field name="name">Pricelist: User sees allowed branches</field>
+            <field name="model_id" ref="product.model_product_pricelist"/>
+            <field name="domain_force">['|', ('branch_id', '=', False), ('branch_id', 'in', branch_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_branch_user'))]"/>
+        </record>
+
+    </data>
+</odoo>
