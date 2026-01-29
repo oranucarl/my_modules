@@ -6,8 +6,16 @@ from odoo.exceptions import UserError, ValidationError
 class ResUsers(models.Model):
     _inherit = 'res.users'
 
-    branch_ids = fields.Many2many('res.branch', string="Allowed Branches")
-    branch_id = fields.Many2one('res.branch', string='Current Branch')
+    branch_ids = fields.Many2many(
+        'res.branch',
+        string="Allowed Branches",
+        domain="[('company_id', 'in', company_ids)]"
+    )
+    branch_id = fields.Many2one(
+        'res.branch',
+        string='Default Branch',
+        domain="[('company_id', '=', company_id)]"
+    )
 
     def write(self, values):
         if 'branch_id' in values or 'branch_ids' in values:
