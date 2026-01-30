@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_b2b_category,b2b.category,model_b2b_category,base.group_user,1,1,1,1
+access_b2b_category_contact,b2b.category.contact,model_b2b_category_contact,base.group_user,1,1,1,1
+access_b2b_notification_log,b2b.notification.log,model_b2b_notification_log,base.group_user,1,0,1,0

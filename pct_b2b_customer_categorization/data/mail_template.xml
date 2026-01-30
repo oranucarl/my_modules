@@ -1,0 +1,27 @@
+<odoo>
+  <record id="mail_template_b2b_threshold" model="mail.template">
+    <field name="name">B2B Category Threshold Alert</field>
+    <field name="model_id" ref="base.model_res_partner"/>
+    <field name="subject">[B2B] ${ctx.get('partner').name or 'Customer'} is ${int(ctx.get('progress') or 0)}% of the ${ctx.get('category').name or 'current'} upper limit</field>
+    <field name="email_from">${(ctx.get('partner') and ctx.get('partner').company_id.email) or 'no-reply@yourcompany.com'}</field>
+    <field name="email_to">${object.email or ''}</field>
+    <field name="body_html"><![CDATA[
+<p>Hello,</p>
+<p>Customer <strong>${ctx.get('partner').name or ''}</strong> has spent
+<strong>${format_amount(ctx.get('spend') or 0.0, (ctx.get('category') and ctx.get('category').currency_id) or object.company_id.currency_id)}</strong>
+from <strong>${ctx.get('date_from') or ''}</strong> to <strong>${ctx.get('date_to') or ''}</strong>.</p>
+
+<p>This is <strong>${int(ctx.get('progress') or 0)}%</strong> of the <em>${ctx.get('category').name or ''}</em> tier range
+(${format_amount(ctx.get('category').lower_limit, ctx.get('category').currency_id)} –
+% if ctx.get('category') and ctx.get('category').upper_limit:
+  ${format_amount(ctx.get('category').upper_limit, ctx.get('category').currency_id)}
+% else:
+  No upper limit
+% endif
+).</p>
+
+<p>They are approaching the next category threshold. Consider proactive outreach.</p>
+]]></field>
+    <field name="auto_delete" eval="True"/>
+  </record>
+</odoo>

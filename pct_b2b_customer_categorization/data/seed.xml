@@ -1,0 +1,20 @@
+<odoo>
+  <record id="b2b_cat_bronze" model="b2b.category">
+    <field name="name">Bronze</field>
+    <field name="lower_limit">500000</field>
+    <field name="upper_limit">1500000</field>
+    <field name="color">3</field>
+  </record>
+  <record id="b2b_cat_silver" model="b2b.category">
+    <field name="name">Silver</field>
+    <field name="lower_limit">1500000</field>
+    <field name="upper_limit">3000000</field>
+    <field name="color">7</field>
+  </record>
+  <record id="b2b_cat_gold" model="b2b.category">
+    <field name="name">Gold</field>
+    <field name="lower_limit">3000000</field>
+    <field name="upper_limit" eval="False"/>
+    <field name="color">10</field>
+  </record>
+</odoo>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="res_config_settings_view_form_b2b" model="ir.ui.view">
+    <field name="name">res.config.settings.view.form.b2b</field>
+    <field name="model">res.config.settings</field>
+    <!-- Target the CRM Settings page -->
+    <field name="inherit_id" ref="crm.res_config_settings_view_form"/>
+    <field name="priority" eval="1000"/>
+    <field name="arch" type="xml">
+
+      <xpath expr="//app[@name='crm']" position="inside">
+        <block name="b2b_categorization_block" title="B2B Categorization" groups="sales_team.group_sale_manager">
+
+          <setting id="b2b_eval_window_setting"
+                   title="Evaluation Window"
+                   help="Controls which invoices are included when calculating each customer's total spend (used to assign Bronze/Silver/Gold).">
+            <div class="row">
+              <label for="b2b_eval_mode" string="Window" class="col-lg-3 o_light_label"/>
+              <field name="b2b_eval_mode" class="oe_inline"/>
+            </div>
+
+            <div class="row mt8" invisible="b2b_eval_mode != 'last_x_days'">
+              <label for="b2b_last_x_days" string="Last X Days" class="col-lg-3 o_light_label"/>
+              <field name="b2b_last_x_days" class="oe_inline"/>
+              <div class="text-muted mt8">
+                Number of days to include when “Last X days” is selected.
+              </div>
+            </div>
+          </setting>
+
+          <setting id="b2b_threshold_setting"
+                   title="Threshold Alerts"
+                   help="Sends an email to the tier’s notify list when a customer's spend reaches this percentage of the tier's upper limit.">
+            <div class="row">
+              <label for="b2b_threshold_pct" string="Notify at (%)" class="col-lg-3 o_light_label"/>
+              <field name="b2b_threshold_pct" class="oe_inline"/>
+            </div>
+            <div class="text-muted mt8">
+              Example: 90 means alert when progress within the current tier ≥ 90%.
+            </div>
+          </setting>
+
+        </block>
+      </xpath>
+
+    </field>
+  </record>
+</odoo>

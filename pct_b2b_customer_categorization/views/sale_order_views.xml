@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_order_form_inherit_b2b" model="ir.ui.view">
+    <field name="name">sale.order.form.b2b.categorization</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_order_form"/>
+    <field name="priority" eval="1000"/>
+    <field name="arch" type="xml">
+      <xpath expr="//form//group[@name='partner_details']/field[@name='partner_id']" position="after">
+        <label for="b2b_category_ids" string="Customer Category"/>
+        <field name="b2b_category_ids"
+               widget="many2many_tags"
+               options="{'color_field': 'color'}"
+               readonly="1"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>
