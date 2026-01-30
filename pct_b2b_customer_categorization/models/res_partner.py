@@ -26,11 +26,11 @@ class ResPartner(models.Model):
         compute_sudo=True,
     )
 
-    # NON-STORED: Progress % toward next tier
+    # STORED: Progress % toward next tier
     b2b_progress_pct = fields.Float(
         string="Progress to next tier",
         compute="_compute_b2b_progress_pct",
-        store=False,
+        store=True,
         compute_sudo=True,
         help="Progress within current tier toward its upper limit.",
     )
@@ -150,7 +150,7 @@ class ResPartner(models.Model):
 
         # Recompute stored totals
         partners._compute_b2b_total_spend()
-        partners._compute_b2b_progress_pct()  # safe non-store compute
+        partners._compute_b2b_progress_pct()
 
         # Aggregate totals per commercial partner
         moves = self.env["account.move"].sudo().read_group(
