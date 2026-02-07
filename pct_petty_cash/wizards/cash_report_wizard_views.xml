@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Cash Report Wizard Form View -->
+    <record id="pct_cash_report_wizard_view_form" model="ir.ui.view">
+        <field name="name">pct.cash.report.wizard.form</field>
+        <field name="model">pct.cash.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cash Report">
+                <group>
+                    <group>
+                        <field name="custodian_id"
+                               options="{'no_create': True}"
+                               groups="pct_petty_cash.group_petty_cash_accountant"/>
+                        <field name="custodian_id"
+                               options="{'no_create': True}"
+                               readonly="1"
+                               groups="!pct_petty_cash.group_petty_cash_accountant"/>
+                    </group>
+                    <group>
+                        <field name="year"/>
+                    </group>
+                </group>
+                <notebook>
+                    <page string="Allocations" name="allocations">
+                        <field name="allocation_line_ids" nolabel="1">
+                            <list string="Allocations" create="0" edit="0">
+                                <field name="payment_date"/>
+                                <field name="petty_cash_id"/>
+                                <field name="amount" sum="Total Allocated"/>
+                                <field name="source_journal_id"/>
+                                <field name="state" widget="badge"
+                                       decoration-success="state == 'posted'"
+                                       decoration-info="state == 'draft'"/>
+                                <field name="currency_id" column_invisible="1"/>
+                            </list>
+                        </field>
+                    </page>
+                    <page string="Expenses" name="expenses">
+                        <field name="expense_line_ids" nolabel="1">
+                            <list string="Expenses" create="0" edit="0">
+                                <field name="expense_date"/>
+                                <field name="petty_cash_id"/>
+                                <field name="description"/>
+                                <field name="product_id"/>
+                                <field name="amount" sum="Total Expensed"/>
+                                <field name="state" widget="badge"
+                                       decoration-success="state == 'posted'"
+                                       decoration-info="state == 'draft'"/>
+                                <field name="currency_id" column_invisible="1"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+                <group string="Summary">
+                    <group>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="amount_brought_forward" readonly="1"/>
+                        <field name="total_allocated" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="total_expensed" readonly="1"/>
+                        <field name="balance" readonly="1" class="oe_subtotal_footer_separator"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_export_excel" type="object"
+                            string="Export Excel" class="btn-primary" icon="fa-file-excel-o"/>
+                    <button name="action_print_pdf" type="object"
+                            string="Export PDF" class="btn-secondary" icon="fa-file-pdf-o"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Cash Report Wizard Action -->
+    <record id="action_cash_report_wizard" model="ir.actions.act_window">
+        <field name="name">Cash Report</field>
+        <field name="res_model">pct.cash.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- PDF Report Action -->
+    <record id="action_report_cash_report" model="ir.actions.report">
+        <field name="name">Cash Report</field>
+        <field name="model">pct.cash.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">pct_petty_cash.report_cash_report_template</field>
+        <field name="report_file">pct_petty_cash.report_cash_report_template</field>
+        <field name="print_report_name">'Petty Cash Report'</field>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- PDF Report Template -->
+    <template id="report_cash_report_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <style>
+                        .report-title { font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+                        .report-subtitle { font-size: 14px; text-align: center; margin-bottom: 30px; color: #666; }
+                        .section-title { font-size: 16px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; background-color: #4472C4; color: white; padding: 8px; }
+                        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        .data-table th { background-color: #4472C4; color: white; padding: 8px; text-align: left; border: 1px solid #ddd; }
+                        .data-table td { padding: 8px; border: 1px solid #ddd; }
+                        .data-table tr:nth-child(even) { background-color: #f9f9f9; }
+                        .total-row { font-weight: bold; background-color: #e9ecef !important; }
+                        .summary-table { width: 50%; margin: 20px auto; }
+                        .text-right { text-align: right; }
+                        .text-center { text-align: center; }
+                    </style>
+
+                    <div class="report-title">Petty Cash Report</div>
+                    <div class="report-subtitle">
+                        Custodian: <t t-esc="custodian_name"/> | Year: <t t-esc="year"/>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="section-title">Summary</div>
+                    <table class="data-table summary-table">
+                        <tr>
+                            <td>Rollover from Previous Year</td>
+                            <td class="text-right"><t t-esc="'{:,.2f}'.format(amount_brought_forward)"/></td>
+                        </tr>
+                        <tr>
+                            <td>Total Allocations</td>
+                            <td class="text-right"><t t-esc="'{:,.2f}'.format(total_allocated)"/></td>
+                        </tr>
+                        <tr>
+                            <td>Total Expenses</td>
+                            <td class="text-right"><t t-esc="'{:,.2f}'.format(total_expensed)"/></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>Balance</td>
+                            <td class="text-right"><t t-esc="'{:,.2f}'.format(balance)"/></td>
+                        </tr>
+                    </table>
+
+                    <!-- Allocations -->
+                    <div class="section-title">Allocations</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Petty Cash</th>
+                                <th>Custodian</th>
+                                <th>Source Journal</th>
+                                <th class="text-right">Amount</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="allocations" t-as="alloc">
+                                <tr>
+                                    <td><t t-esc="alloc.payment_date"/></td>
+                                    <td><t t-esc="alloc.petty_cash_id.name"/></td>
+                                    <td><t t-esc="alloc.petty_cash_id.custodian_id.name"/></td>
+                                    <td><t t-esc="alloc.source_journal_id.name"/></td>
+                                    <td class="text-right"><t t-esc="'{:,.2f}'.format(alloc.amount)"/></td>
+                                    <td class="text-center"><t t-esc="alloc.state"/></td>
+                                </tr>
+                            </t>
+                            <tr class="total-row">
+                                <td colspan="4" class="text-right">Total:</td>
+                                <td class="text-right"><t t-esc="'{:,.2f}'.format(total_allocated)"/></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Expenses -->
+                    <div class="section-title">Expenses</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Petty Cash</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th class="text-right">Amount</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="expenses" t-as="exp">
+                                <tr>
+                                    <td><t t-esc="exp.expense_date"/></td>
+                                    <td><t t-esc="exp.petty_cash_id.name"/></td>
+                                    <td><t t-esc="exp.description"/></td>
+                                    <td><t t-esc="exp.product_id.name or ''"/></td>
+                                    <td class="text-right"><t t-esc="'{:,.2f}'.format(exp.amount)"/></td>
+                                    <td class="text-center"><t t-esc="exp.state"/></td>
+                                </tr>
+                            </t>
+                            <tr class="total-row">
+                                <td colspan="4" class="text-right">Total:</td>
+                                <td class="text-right"><t t-esc="'{:,.2f}'.format(total_expensed)"/></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 40px; text-align: center; color: #666; font-size: 10px;">
+                        Generated on <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M:%S')"/>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

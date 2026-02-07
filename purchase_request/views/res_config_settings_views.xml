@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2018-2019 ForgeFlow, S.L.
+     License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl-3.0) -->
+<odoo>
+    <record id="res_config_settings_view_form_purchase_request" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.purchase.request</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="purchase.res_config_settings_view_form_purchase" />
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='purchase']" position="inside">
+                <block title="Purchase Request Settings" name="purchase_request_settings">
+                    <setting
+                        id="pr_creation_limit_setting"
+                        string="PR Creation Limit"
+                        help="Maximum number of Purchase Requests a Project Manager can create per week. Set to 0 for unlimited."
+                    >
+                        <div class="content-group">
+                            <div class="row mt16">
+                                <label for="pr_creation_limit" class="col-lg-3" />
+                                <field name="pr_creation_limit" />
+                            </div>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

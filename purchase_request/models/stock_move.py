@@ -109,6 +109,31 @@ class StockMove(models.Model):
                 )
             )
 
+    def _action_done(self, cancel_backorder=False):
+        """Update allocation's allocated_product_qty when moves are completed."""
+        res = super()._action_done(cancel_backorder=cancel_backorder)
+        purchase_requests = self.env["purchase.request"]
+        for move in self.filtered(lambda m: m.state == "done"):
+            for allocation in move.purchase_request_allocation_ids:
+                # Update the allocated quantity based on what was actually received
+                # Convert the move's quantity to the allocation's UoM
+                if allocation.product_uom_id and move.product_uom:
+                    allocated_qty = move.product_uom._compute_quantity(
+                        move.quantity, allocation.product_uom_id
+                    )
+                else:
+                    allocated_qty = move.quantity
+                # Update allocation with the received quantity
+                allocation.allocated_product_qty = allocated_qty
+                allocation._notify_allocation(allocated_qty)
+                # Collect PR for auto-done check
+                if allocation.purchase_request_line_id.request_id:
+                    purchase_requests |= allocation.purchase_request_line_id.request_id
+        # Check if any related PRs should be auto-done
+        if purchase_requests:
+            purchase_requests.check_auto_done()
+        return res
+
     def copy_data(self, default=None):
         """Propagate request allocation on copy.
 

@@ -309,8 +309,9 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
         user_tz = pytz.timezone(self.env.user.tz or "UTC")
         # TODO: Check propagate_uom compatibility:
         price_unit = item.estimated_cost / item.product_qty
+        # Pass the wizard item's quantity to use instead of the PR line's original qty
         new_qty = self.env["purchase.request.line"]._calc_new_qty(
-            line, po_line=po_line, new_pr_line=new_pr_line
+            line, po_line=po_line, new_pr_line=new_pr_line, wizard_qty=item.product_qty
         )
         po_line.product_qty = new_qty
         if item.keep_estimated_cost:

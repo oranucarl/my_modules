@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl-3.0) -->
+<odoo>
+    <record id="view_purchase_request_create_transfer_wizard_form" model="ir.ui.view">
+        <field name="name">purchase.request.create.transfer.wizard.form</field>
+        <field name="model">purchase.request.create.transfer.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Create Internal Transfer">
+                <group>
+                    <group>
+                        <field name="purchase_request_id" readonly="1" />
+                        <field name="picking_type_id" readonly="1" />
+                    </group>
+                    <group>
+                        <field name="dest_location_id" readonly="1" />
+                    </group>
+                </group>
+                <group string="Items to Transfer">
+                    <p class="text-muted">
+                        Review the items below and adjust quantities if needed before creating the transfer.
+                    </p>
+                </group>
+                <field name="line_ids">
+                    <list editable="bottom">
+                        <field name="product_id" readonly="1" />
+                        <field name="source_location_id" options="{'no_create': True}" />
+                        <field name="transfer_qty" />
+                        <field name="product_uom_id" readonly="1" groups="uom.group_uom" />
+                        <field name="pr_line_id" column_invisible="1" />
+                    </list>
+                </field>
+                <footer>
+                    <button
+                        name="action_create_transfer"
+                        string="Create Transfer"
+                        type="object"
+                        class="btn-primary"
+                    />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_purchase_request_create_transfer" model="ir.actions.act_window">
+        <field name="name">Create Internal Transfer</field>
+        <field name="res_model">purchase.request.create.transfer.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

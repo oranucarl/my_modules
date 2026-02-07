@@ -10,7 +10,8 @@
         <field name="arch" type="xml">
             <xpath expr="//form[1]/sheet[1]/group[1]/group[1]/field[@name='ref'][2]" position="after">
                 <field name="branch_id"
-                    options="{'no_open': True, 'no_create': True, 'no_create_edit': True, 'no_quick_create': True}"/>
+                    options="{'no_open': True, 'no_create': True, 'no_create_edit': True, 'no_quick_create': True}"
+                    readonly="state != 'draft'"/>
             </xpath>
         </field>
     </record>
@@ -39,7 +40,8 @@
         <field name="arch" type="xml">
             <xpath expr="//form[1]/sheet[1]/group[@name='main_group']/group[@name='group2']/field[@name='partner_bank_id'][3]" position="after">
                 <field name="branch_id"
-                    options="{'no_open': True, 'no_create': True, 'no_create_edit': True, 'no_quick_create': True}"/>
+                    options="{'no_open': True, 'no_create': True, 'no_create_edit': True, 'no_quick_create': True}"
+                    readonly="state != 'draft'"/>
             </xpath>
         </field>
     </record>

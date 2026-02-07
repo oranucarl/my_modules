@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Module Category -->
+    <record id="module_category_petty_cash" model="ir.module.category">
+        <field name="name">Petty Cash</field>
+        <field name="description">Petty Cash Management</field>
+        <field name="sequence">50</field>
+    </record>
+
+    <!-- Security Groups -->
+    <!-- Petty Cash Users (PCU) - Base group -->
+    <record id="group_petty_cash_user" model="res.groups">
+        <field name="name">Petty Cash User</field>
+        <field name="category_id" ref="module_category_petty_cash"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Can view own petty cash records and create allocation/expense requests via wizards.</field>
+    </record>
+
+    <!-- Petty Cash Accountants (PCA) - Can post entries -->
+    <record id="group_petty_cash_accountant" model="res.groups">
+        <field name="name">Petty Cash Accountant</field>
+        <field name="category_id" ref="module_category_petty_cash"/>
+        <field name="implied_ids" eval="[(4, ref('group_petty_cash_user'))]"/>
+        <field name="comment">Can modify all lines, post entries, and see all custodian records.</field>
+    </record>
+
+    <!-- Petty Cash Managers (PCM) - Full access -->
+    <record id="group_petty_cash_manager" model="res.groups">
+        <field name="name">Petty Cash Manager</field>
+        <field name="category_id" ref="module_category_petty_cash"/>
+        <field name="implied_ids" eval="[(4, ref('group_petty_cash_accountant'))]"/>
+        <field name="comment">Full access to petty cash management including configuration.</field>
+    </record>
+
+    <!-- Record Rules -->
+
+    <!-- Petty Cash Users can only see their own records -->
+    <record id="petty_cash_user_rule" model="ir.rule">
+        <field name="name">Petty Cash: User sees own records only</field>
+        <field name="model_id" ref="model_pct_petty_cash"/>
+        <field name="domain_force">[('custodian_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_petty_cash_user'))]"/>
+    </record>
+
+    <!-- Petty Cash Accountants can see all records -->
+    <record id="petty_cash_accountant_rule" model="ir.rule">
+        <field name="name">Petty Cash: Accountant sees all records</field>
+        <field name="model_id" ref="model_pct_petty_cash"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_petty_cash_accountant'))]"/>
+    </record>
+
+    <!-- Allocation lines - Users see only their petty cash allocations -->
+    <record id="petty_cash_allocation_user_rule" model="ir.rule">
+        <field name="name">Petty Cash Allocation: User sees own records only</field>
+        <field name="model_id" ref="model_pct_petty_cash_allocation"/>
+        <field name="domain_force">[('petty_cash_id.custodian_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_petty_cash_user'))]"/>
+    </record>
+
+    <!-- Allocation lines - Accountants see all -->
+    <record id="petty_cash_allocation_accountant_rule" model="ir.rule">
+        <field name="name">Petty Cash Allocation: Accountant sees all records</field>
+        <field name="model_id" ref="model_pct_petty_cash_allocation"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_petty_cash_accountant'))]"/>
+    </record>
+
+    <!-- Expense lines - Users see only their petty cash expenses -->
+    <record id="petty_cash_expense_user_rule" model="ir.rule">
+        <field name="name">Petty Cash Expense: User sees own records only</field>
+        <field name="model_id" ref="model_pct_petty_cash_expense"/>
+        <field name="domain_force">[('petty_cash_id.custodian_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_petty_cash_user'))]"/>
+    </record>
+
+    <!-- Expense lines - Accountants see all -->
+    <record id="petty_cash_expense_accountant_rule" model="ir.rule">
+        <field name="name">Petty Cash Expense: Accountant sees all records</field>
+        <field name="model_id" ref="model_pct_petty_cash_expense"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_petty_cash_accountant'))]"/>
+    </record>
+
+    <!-- Company Rules -->
+    <record id="petty_cash_company_rule" model="ir.rule">
+        <field name="name">Petty Cash: Multi-company</field>
+        <field name="model_id" ref="model_pct_petty_cash"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="petty_cash_allocation_company_rule" model="ir.rule">
+        <field name="name">Petty Cash Allocation: Multi-company</field>
+        <field name="model_id" ref="model_pct_petty_cash_allocation"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="petty_cash_expense_company_rule" model="ir.rule">
+        <field name="name">Petty Cash Expense: Multi-company</field>
+        <field name="model_id" ref="model_pct_petty_cash_expense"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+</odoo>

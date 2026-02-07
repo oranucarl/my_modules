@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Petty Cash Settings View -->
+    <record id="res_config_settings_view_form_petty_cash" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.petty.cash</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="50"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Petty Cash" string="Petty Cash" name="pct_petty_cash" logo="/pct_petty_cash/static/description/module.png">
+                    <block title="Petty Cash Settings">
+                        <setting string="Default Journal" help="Set a default journal for new petty cash records">
+                            <field name="petty_cash_default_journal_id"/>
+                        </setting>
+                        <setting string="Analytic Accounting" help="Require analytic distribution on expenses">
+                            <field name="petty_cash_require_analytic"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Settings Action -->
+    <record id="action_petty_cash_config_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'pct_petty_cash', 'bin_size': False}</field>
+    </record>
+
+</odoo>

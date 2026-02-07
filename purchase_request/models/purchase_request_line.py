@@ -7,6 +7,7 @@ from odoo.exceptions import UserError
 _STATES = [
     ("draft", "Draft"),
     ("to_approve", "To be approved"),
+    ("on_hold", "On Hold"),
     ("approved", "Approved"),
     ("in_progress", "In progress"),
     ("done", "Done"),
@@ -76,6 +77,11 @@ class PurchaseRequestLine(models.Model):
     )
     is_editable = fields.Boolean(compute="_compute_is_editable", readonly=True)
     specifications = fields.Text()
+    technical_description = fields.Html(
+        string="Technical Description",
+        sanitize=True,
+        sanitize_overridable=False,
+    )
     request_state = fields.Selection(
         string="Request state",
         related="request_id.state",
@@ -94,6 +100,7 @@ class PurchaseRequestLine(models.Model):
         string="RFQ/PO Qty",
         digits="Product Unit of Measure",
         compute="_compute_purchased_qty",
+        store=True,
     )
     purchase_lines = fields.Many2many(
         comodel_name="purchase.order.line",
@@ -172,6 +179,63 @@ class PurchaseRequestLine(models.Model):
         domain=[("purchase_ok", "=", True)],
         tracking=True,
     )
+
+    # Internal Transfer fields
+    transfer_allocation_ids = fields.One2many(
+        comodel_name="purchase.request.allocation",
+        inverse_name="purchase_request_line_id",
+        string="Transfer Allocations",
+        domain=[("stock_move_id.picking_id.picking_type_id.code", "=", "internal")],
+    )
+    qty_in_transfer = fields.Float(
+        digits="Product Unit of Measure",
+        readonly=True,
+        compute="_compute_transfer_qty",
+        store=True,
+        help="Quantity in draft/confirmed internal transfers.",
+    )
+    unfulfilled_qty = fields.Float(
+        digits="Product Unit of Measure",
+        readonly=True,
+        compute="_compute_unfulfilled_qty",
+        store=True,
+        help="Quantity not yet in RFQ/PO or internal transfer.",
+    )
+
+    @api.depends(
+        "purchase_request_allocation_ids",
+        "purchase_request_allocation_ids.stock_move_id",
+        "purchase_request_allocation_ids.stock_move_id.state",
+        "purchase_request_allocation_ids.stock_move_id.picking_id",
+        "purchase_request_allocation_ids.stock_move_id.picking_id.picking_type_id",
+        "purchase_request_allocation_ids.requested_product_uom_qty",
+    )
+    def _compute_transfer_qty(self):
+        """Compute quantity currently in draft/confirmed internal transfers."""
+        for rec in self:
+            transfer_qty = 0.0
+            for allocation in rec.purchase_request_allocation_ids:
+                move = allocation.stock_move_id
+                if (
+                    move
+                    and move.picking_id
+                    and move.picking_id.picking_type_id.code == "internal"
+                    and move.state not in ("done", "cancel")
+                ):
+                    transfer_qty += allocation.requested_product_uom_qty
+            rec.qty_in_transfer = transfer_qty
+
+    @api.depends(
+        "product_qty",
+        "purchased_qty",
+        "qty_in_transfer",
+    )
+    def _compute_unfulfilled_qty(self):
+        """Compute quantity not yet allocated to RFQ/PO or internal transfer."""
+        for rec in self:
+            rec.unfulfilled_qty = max(
+                0.0, rec.product_qty - rec.purchased_qty - rec.qty_in_transfer
+            )
 
     @api.depends(
         "purchase_request_allocation_ids",
@@ -255,6 +319,7 @@ class PurchaseRequestLine(models.Model):
                 "approved",
                 "rejected",
                 "in_progress",
+                "on_hold",
                 "done",
             ):
                 rec.is_editable = False
@@ -298,6 +363,7 @@ class PurchaseRequestLine(models.Model):
             requests.check_auto_reject()
         return res
 
+    @api.depends("purchase_lines", "purchase_lines.state", "purchase_lines.product_qty")
     def _compute_purchased_qty(self):
         for rec in self:
             rec.purchased_qty = 0.0
@@ -347,7 +413,18 @@ class PurchaseRequestLine(models.Model):
         return seller_min_qty
 
     @api.model
-    def _calc_new_qty(self, request_line, po_line=None, new_pr_line=False):
+    def _calc_new_qty(
+        self, request_line, po_line=None, new_pr_line=False, wizard_qty=None
+    ):
+        """Calculate the new quantity for a PO line based on PR allocations.
+
+        Args:
+            request_line: The purchase request line being processed
+            po_line: The purchase order line to update
+            new_pr_line: Whether this is a new PR line being added
+            wizard_qty: The quantity from the wizard item (if provided, uses this
+                       for the current request_line instead of its product_qty)
+        """
         purchase_uom = po_line.product_uom or request_line.product_id.uom_po_id
         # TODO: Not implemented yet.
         #  Make sure we use the minimum quantity of the partner corresponding
@@ -361,7 +438,11 @@ class PurchaseRequestLine(models.Model):
         rl_qty = 0.0
         # Recompute quantity by adding existing running procurements.
         for rl in po_line.purchase_request_lines:
-            rl_qty += rl.product_uom_id._compute_quantity(rl.product_qty, purchase_uom)
+            if rl == request_line and wizard_qty is not None:
+                # Use the wizard's quantity for the current line being processed
+                rl_qty += rl.product_uom_id._compute_quantity(wizard_qty, purchase_uom)
+            else:
+                rl_qty += rl.product_uom_id._compute_quantity(rl.product_qty, purchase_uom)
         qty = max(rl_qty, supplierinfo_min_qty)
         return qty
 

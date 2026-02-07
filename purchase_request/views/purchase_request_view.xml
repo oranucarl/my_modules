@@ -11,7 +11,7 @@
                     <button
                         name="button_draft"
                         string="Reset"
-                        invisible="state not in ('to_approve','approved','rejected','in_progress','done')"
+                        invisible="state != 'done'"
                         type="object"
                         groups="purchase_request.group_purchase_request_manager"
                     />
@@ -24,7 +24,7 @@
                     />
                     <button
                         name="button_approved"
-                        invisible="state not in ('to_approve')"
+                        invisible="state not in ('to_approve', 'on_hold')"
                         string="Approve"
                         type="object"
                         class="oe_highlight"
@@ -44,6 +44,13 @@
                         type="action"
                     />
                     <button
+                        name="action_check_availability"
+                        invisible="state != 'to_approve'"
+                        string="Check Availability"
+                        type="object"
+                        groups="purchase_request.group_purchase_request_manager,purchase_request.group_purchase_request_administrator"
+                    />
+                    <button
                         name="button_done"
                         invisible="state not in ('approved', 'in_progress')"
                         string="Done"
@@ -58,11 +65,26 @@
                         type="object"
                         groups="purchase_request.group_purchase_request_manager"
                     />
+                    <button
+                        name="button_on_hold"
+                        invisible="state != 'to_approve'"
+                        string="On Hold"
+                        type="object"
+                        groups="purchase_request.group_purchase_request_user"
+                    />
+                    <button
+                        name="button_remove_on_hold"
+                        invisible="state != 'on_hold'"
+                        string="Remove On Hold"
+                        type="object"
+                        class="oe_highlight"
+                        groups="purchase_request.group_purchase_request_manager,purchase_request.group_purchase_request_administrator"
+                    />
                     <field
                         name="state"
                         widget="statusbar"
-                        statusbar_visible="draft,to_approve,approved,done,in_progress"
-                        statusbar_colors='{"approved":"blue"}'
+                        statusbar_visible="draft,to_approve,on_hold,approved,in_progress,done"
+                        statusbar_colors='{"approved":"blue","on_hold":"warning"}'
                     />
                 </header>
                 <sheet>
@@ -105,6 +127,20 @@
                                 string="Pickings"
                             />
                         </button>
+                        <button
+                            type="object"
+                            name="action_view_transfers"
+                            class="oe_stat_button"
+                            invisible="transfer_count == 0"
+                            groups="stock.group_stock_user"
+                            icon="fa-exchange"
+                        >
+                            <field
+                                name="transfer_count"
+                                widget="statinfo"
+                                string="Transfers"
+                            />
+                        </button>
                     </div>
                     <div class="oe_edit_only">
                         <label for="name" class="oe_inline" />
@@ -138,6 +174,12 @@
                                 readonly="is_editable == False"
                                 groups="base.group_no_one"
                             />
+                            <field
+                                name="on_hold_reason"
+                                readonly="1"
+                                invisible="not on_hold_reason"
+                            />
+                            <field name="previous_state" invisible="1" />
                         </group>
                         <group>
                             <field name="date_start" readonly="is_editable == False" />
@@ -190,6 +232,8 @@
                                     <field name="cancelled" column_invisible="1" />
                                     <field name="is_editable" column_invisible="1" />
                                     <field name="purchased_qty" />
+                                    <field name="qty_in_transfer" optional="hide" />
+                                    <field name="unfulfilled_qty" optional="hide" />
                                     <field
                                         name="purchase_state"
                                         widget="badge"
@@ -222,6 +266,17 @@
                                     options="{'currency_field': 'currency_id'}"
                                 />
                             </group>
+                        </page>
+                        <page string="Internal Transfers" name="internal_transfers">
+                            <field name="transfer_ids" readonly="1">
+                                <list>
+                                    <field name="name" />
+                                    <field name="scheduled_date" />
+                                    <field name="location_id" />
+                                    <field name="location_dest_id" />
+                                    <field name="state" widget="badge" decoration-success="state == 'done'" decoration-info="state in ('assigned', 'waiting')" decoration-muted="state == 'draft'" decoration-danger="state == 'cancel'" />
+                                </list>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>
@@ -257,7 +312,7 @@
                     widget="badge"
                     decoration-success="state in ('done', 'approved', 'in_progress')"
                     decoration-muted="state == 'draft'"
-                    decoration-warning="state == 'to_approve'"
+                    decoration-warning="state in ('to_approve', 'on_hold')"
                     decoration-danger="state == 'rejected'"
                 />
             </list>
@@ -302,6 +357,12 @@
                     string="In Progress"
                     domain="[('state','=','in_progress')]"
                     help="Request is in progress"
+                />
+                <filter
+                    name="state_on_hold"
+                    string="On Hold"
+                    domain="[('state','=','on_hold')]"
+                    help="Request is on hold"
                 />
                 <filter
                     name="state_rejected"
@@ -405,7 +466,7 @@
                             <field
                                 name="state"
                                 widget="label_selection"
-                                options="{'classes': {'draft': 'default', 'cancel': 'default', 'done': 'success', 'approved': 'warning'}}"
+                                options="{'classes': {'draft': 'default', 'cancel': 'default', 'done': 'success', 'approved': 'warning', 'on_hold': 'info'}}"
                                 class="ms-auto"
                             />
                         </footer>
@@ -442,13 +503,13 @@
         name="Purchase Requests"
         sequence="22"
         web_icon="purchase_request,static/description/icon.png"
-        groups="group_purchase_request_user,group_purchase_request_manager"
+        groups="group_purchase_request_user,group_purchase_request_manager,group_purchase_request_administrator"
     />
     <menuitem
         id="menu_purchase_request"
         name="Purchase Requests"
         parent="parent_menu_purchase_request"
-        groups="group_purchase_request_user,group_purchase_request_manager"
+        groups="group_purchase_request_user,group_purchase_request_manager,group_purchase_request_administrator"
     />
     <menuitem
         id="menu_purchase_request_act"

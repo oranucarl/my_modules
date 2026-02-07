@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Allocation Wizard Form View -->
+    <record id="pct_petty_cash_allocation_wizard_view_form" model="ir.ui.view">
+        <field name="name">pct.petty.cash.allocation.wizard.form</field>
+        <field name="model">pct.petty.cash.allocation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Request Allocation">
+                <group>
+                    <group>
+                        <field name="petty_cash_id" readonly="1" force_save="1"/>
+                        <field name="payment_date"/>
+                        <field name="amount"/>
+                    </group>
+                    <group>
+                        <field name="company_id" invisible="1"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="source_journal_id" options="{'no_create': True}"/>
+                        <field name="analytic_distribution" widget="analytic_distribution"
+                               groups="analytic.group_analytic_accounting"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_create_allocation" type="object"
+                            string="Create Allocation" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Allocation Wizard Action -->
+    <record id="action_allocation_wizard" model="ir.actions.act_window">
+        <field name="name">Request Allocation</field>
+        <field name="res_model">pct.petty.cash.allocation.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_petty_cash_id': active_id}</field>
+    </record>
+
+</odoo>

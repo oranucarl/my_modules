@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pct_petty_cash_user,pct.petty.cash.user,model_pct_petty_cash,group_petty_cash_user,1,0,0,0
+access_pct_petty_cash_accountant,pct.petty.cash.accountant,model_pct_petty_cash,group_petty_cash_accountant,1,1,1,0
+access_pct_petty_cash_manager,pct.petty.cash.manager,model_pct_petty_cash,group_petty_cash_manager,1,1,1,1
+access_pct_petty_cash_allocation_user,pct.petty.cash.allocation.user,model_pct_petty_cash_allocation,group_petty_cash_user,1,0,1,0
+access_pct_petty_cash_allocation_accountant,pct.petty.cash.allocation.accountant,model_pct_petty_cash_allocation,group_petty_cash_accountant,1,1,1,0
+access_pct_petty_cash_allocation_manager,pct.petty.cash.allocation.manager,model_pct_petty_cash_allocation,group_petty_cash_manager,1,1,1,1
+access_pct_petty_cash_expense_user,pct.petty.cash.expense.user,model_pct_petty_cash_expense,group_petty_cash_user,1,0,1,0
+access_pct_petty_cash_expense_accountant,pct.petty.cash.expense.accountant,model_pct_petty_cash_expense,group_petty_cash_accountant,1,1,1,0
+access_pct_petty_cash_expense_manager,pct.petty.cash.expense.manager,model_pct_petty_cash_expense,group_petty_cash_manager,1,1,1,1
+access_pct_petty_cash_allocation_wizard_user,pct.petty.cash.allocation.wizard.user,model_pct_petty_cash_allocation_wizard,group_petty_cash_user,1,1,1,1
+access_pct_petty_cash_expense_wizard_user,pct.petty.cash.expense.wizard.user,model_pct_petty_cash_expense_wizard,group_petty_cash_user,1,1,1,1
+access_pct_cash_report_wizard_user,pct.cash.report.wizard.user,model_pct_cash_report_wizard,group_petty_cash_user,1,1,1,1

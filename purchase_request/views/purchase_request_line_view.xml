@@ -18,6 +18,7 @@
                     widget="badge"
                     decoration-success="request_state in ('done', 'approved', 'in_progress')"
                     decoration-info="request_state in ('draft', 'to_approve')"
+                    decoration-warning="request_state == 'on_hold'"
                     decoration-danger="request_state == 'rejected'"
                 />
                 <field name="requested_by" widget="many2one_avatar_user" />
@@ -26,6 +27,8 @@
                 <field name="estimated_cost" widget="monetary" />
                 <field name="currency_id" column_invisible="1" />
                 <field name="purchased_qty" />
+                <field name="qty_in_transfer" optional="hide" />
+                <field name="unfulfilled_qty" optional="hide" />
                 <field
                     name="purchase_state"
                     widget="badge"
@@ -70,7 +73,7 @@
                     <field
                         name="request_state"
                         widget="statusbar"
-                        statusbar_visible="draft,to_approve,approved,done,in_progress"
+                        statusbar_visible="draft,to_approve,on_hold,approved,in_progress,done"
                     />
                 </header>
                 <sheet>
@@ -141,6 +144,15 @@
                             readonly="is_editable == False"
                         />
                     </group>
+                    <group name="technical_description">
+                        <separator string="Technical Description" />
+                        <newline />
+                        <field
+                            name="technical_description"
+                            nolabel="1"
+                            readonly="is_editable == False"
+                        />
+                    </group>
                     <group name="quantities" string="Tracking">
                         <group>
                             <field name="pending_qty_to_receive" />
@@ -176,6 +188,22 @@
                                     <field name="open_product_qty" />
                                     <field name="product_uom_id" />
                                     <field name="purchase_state" column_invisible="1" />
+                                </list>
+                            </field>
+                        </page>
+                        <page name="internal_transfers" string="Internal Transfers">
+                            <group string="Transfer Quantities">
+                                <field name="qty_in_transfer" />
+                                <field name="unfulfilled_qty" />
+                            </group>
+                            <field name="transfer_allocation_ids" readonly="1">
+                                <list>
+                                    <field name="stock_move_id" />
+                                    <field name="product_id" />
+                                    <field name="requested_product_uom_qty" />
+                                    <field name="allocated_product_qty" />
+                                    <field name="open_product_qty" />
+                                    <field name="product_uom_id" />
                                 </list>
                             </field>
                         </page>
@@ -254,6 +282,12 @@
                     string="In Progress"
                     domain="[('request_state','=','in_progress')]"
                     help="Request is in progress"
+                />
+                <filter
+                    name="request_state_on_hold"
+                    string="On Hold"
+                    domain="[('request_state','=','on_hold')]"
+                    help="Request is on hold"
                 />
                 <filter
                     name="assigned_to_me"
@@ -350,7 +384,7 @@
         <field name="binding_model_id" ref="product.model_product_product" />
         <field
             name="groups_id"
-            eval="[(4, ref('purchase_request.group_purchase_request_user')),(4, ref('purchase_request.group_purchase_request_manager'))]"
+            eval="[(4, ref('purchase_request.group_purchase_request_user')),(4, ref('purchase_request.group_purchase_request_manager')),(4, ref('purchase_request.group_purchase_request_administrator'))]"
         />
     </record>
     <record id="purchase_request_line_form_action" model="ir.actions.act_window">
@@ -557,6 +591,15 @@
                         <newline />
                         <field
                             name="specifications"
+                            nolabel="1"
+                            readonly="is_editable == False"
+                        />
+                    </group>
+                    <group name="technical_description">
+                        <separator string="Technical Description" />
+                        <newline />
+                        <field
+                            name="technical_description"
                             nolabel="1"
                             readonly="is_editable == False"
                         />

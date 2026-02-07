@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl-3.0) -->
+<odoo>
+    <data noupdate="1">
+        <!-- Email template for stock transfer notifications -->
+        <record id="email_template_stock_transfer_notification" model="mail.template">
+            <field name="name">Stock Transfer: Notification to Storekeeper</field>
+            <field name="model_id" ref="stock.model_stock_picking" />
+            <field name="subject">{{ object.picking_type_id.name }}: {{ object.name }} requires your attention</field>
+            <field name="email_from">{{ (object.company_id.email or user.email_formatted) }}</field>
+            <field name="partner_to"></field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <t t-out="ctx.get('recipient_name', 'Storekeeper')"/>,
+        <br/><br/>
+        A new <strong><t t-out="ctx.get('picking_type_name', 'stock transfer')"/></strong> has been created that requires your attention.
+        <br/><br/>
+        <strong>Transfer Details:</strong>
+        <ul>
+            <li><strong>Reference:</strong> <t t-out="object.name"/></li>
+            <li><strong>Operation Type:</strong> <t t-out="object.picking_type_id.name"/></li>
+            <li><strong>Source Location:</strong> <t t-out="object.location_id.display_name"/></li>
+            <li><strong>Destination Location:</strong> <t t-out="object.location_dest_id.display_name"/></li>
+            <li><strong>Scheduled Date:</strong> <t t-out="object.scheduled_date"/></li>
+            <li><strong>Your Role:</strong> <t t-out="ctx.get('location_type', '').title()"/> Storekeeper</li>
+        </ul>
+        <t t-if="ctx.get('location_type') == 'source'">
+            <p>As the <strong>Source Storekeeper</strong>, please prepare the items for transfer.</p>
+        </t>
+        <t t-if="ctx.get('location_type') == 'destination'">
+            <p>As the <strong>Destination Storekeeper</strong>, please prepare to receive and validate this transfer.</p>
+        </t>
+        <br/>
+        <strong>Products:</strong>
+        <table style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr style="background-color: #f5f5f5;">
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Product</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-foreach="object.move_ids" t-as="move">
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;"><t t-out="move.product_id.display_name"/></td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: right;"><t t-out="move.product_uom_qty"/> <t t-out="move.product_uom.name"/></td>
+                    </tr>
+                </t>
+            </tbody>
+        </table>
+        <br/><br/>
+        Please log in to the system to view and process this transfer.
+        <br/><br/>
+        Best regards,<br/>
+        <t t-out="object.company_id.name"/>
+    </p>
+</div>
+            </field>
+            <field name="auto_delete" eval="True" />
+        </record>
+    </data>
+</odoo>

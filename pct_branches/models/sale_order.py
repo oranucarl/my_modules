@@ -16,8 +16,17 @@ class SaleOrder(models.Model):
     @api.model
     def default_get(self, fields_list):
         res = super(SaleOrder, self).default_get(fields_list)
-        if 'branch_id' in fields_list and self.env.user.branch_id:
-            res['branch_id'] = self.env.user.branch_id.id
+        if self.env.user.branch_id:
+            if 'branch_id' in fields_list:
+                res['branch_id'] = self.env.user.branch_id.id
+            # Set default warehouse based on user's default branch
+            if 'warehouse_id' in fields_list:
+                warehouse = self.env['stock.warehouse'].search(
+                    [('branch_id', '=', self.env.user.branch_id.id)],
+                    limit=1
+                )
+                if warehouse:
+                    res['warehouse_id'] = warehouse.id
         return res
 
     @api.onchange('branch_id')

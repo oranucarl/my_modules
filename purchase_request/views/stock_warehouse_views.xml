@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl-3.0) -->
+<odoo>
+    <!-- Inherit warehouse form view to add project manager and storekeeper fields -->
+    <record id="view_warehouse_inherit_purchase_request" model="ir.ui.view">
+        <field name="name">stock.warehouse.form.inherit.purchase.request</field>
+        <field name="model">stock.warehouse</field>
+        <field name="inherit_id" ref="stock.view_warehouse" />
+        <field name="arch" type="xml">
+            <!-- Add project_manager_id after partner_id (address) -->
+            <field name="partner_id" position="after">
+                <field name="project_manager_id" />
+            </field>
+            <!-- Add storekeeper_id after code -->
+            <field name="code" position="after">
+                <field name="storekeeper_id" />
+            </field>
+        </field>
+    </record>
+
+    <!-- Inherit warehouse list view to add project manager and storekeeper columns -->
+    <record id="view_warehouse_tree_inherit_purchase_request" model="ir.ui.view">
+        <field name="name">stock.warehouse.list.inherit.purchase.request</field>
+        <field name="model">stock.warehouse</field>
+        <field name="inherit_id" ref="stock.view_warehouse_tree" />
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="project_manager_id" optional="show" />
+                <field name="storekeeper_id" optional="show" />
+            </field>
+        </field>
+    </record>
+</odoo>

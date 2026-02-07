@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_account_asset_form_inherit" model="ir.ui.view">
+        <field name="name">account.asset.form.inherit.pct</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
+        <field name="arch" type="xml">
+            <!-- Add serial_number before original_value field -->
+            <field name="original_value" position="before">
+                <field name="serial_number"/>
+            </field>
+            <!-- Add assigned_to_id after asset_group_id field -->
+            <field name="asset_group_id" position="after">
+                <field name="assigned_to_id"/>
+                <field name="department_id"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

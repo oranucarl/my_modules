@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Expense Wizard Form View -->
+    <record id="pct_petty_cash_expense_wizard_view_form" model="ir.ui.view">
+        <field name="name">pct.petty.cash.expense.wizard.form</field>
+        <field name="model">pct.petty.cash.expense.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Record Expense">
+                <group>
+                    <group>
+                        <field name="petty_cash_id" readonly="1" force_save="1"/>
+                        <field name="expense_date"/>
+                        <field name="product_id" options="{'no_create': True}"/>
+                    </group>
+                    <group>
+                        <field name="company_id" invisible="1"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="description"/>
+                        <field name="amount"/>
+                        <field name="analytic_distribution" widget="analytic_distribution"
+                               groups="analytic.group_analytic_accounting"/>
+                    </group>
+                </group>
+                <group string="Attachments">
+                    <field name="attachment_ids" widget="many2many_binary" nolabel="1"/>
+                </group>
+                <footer>
+                    <button name="action_create_expense" type="object"
+                            string="Create Expense" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Expense Wizard Action -->
+    <record id="action_expense_wizard" model="ir.actions.act_window">
+        <field name="name">Record Expense</field>
+        <field name="res_model">pct.petty.cash.expense.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_petty_cash_id': active_id}</field>
+    </record>
+
+</odoo>
