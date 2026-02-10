@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_pricelist_form_inherit_branch_discount" model="ir.ui.view">
+        <field name="name">product.pricelist.form.branch.discount</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="product.product_pricelist_view"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='branch_id']" position="after">
+                <field name="discount_id" required="1"
+                           options="{'no_create': True}"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

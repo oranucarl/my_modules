@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tree View -->
+    <record id="view_sale_discount_tree" model="ir.ui.view">
+        <field name="name">sale.discount.tree</field>
+        <field name="model">sale.discount</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="discount_rate"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_sale_discount_form" model="ir.ui.view">
+        <field name="name">sale.discount.form</field>
+        <field name="model">sale.discount</field>
+        <field name="arch" type="xml">
+            <form string="Discount Category">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                        </group>
+                        <group>
+                            <field name="discount_rate"/>
+                            <field name="active"/>
+                            <field name="company_id" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_sale_discount" model="ir.actions.act_window">
+        <field name="name">Discount Categories</field>
+        <field name="res_model">sale.discount</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('company_id', '=', context.get('allowed_company_ids')[0])]</field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem
+        id="menu_sale_discount_root"
+        name="Discount Configuration"
+        parent="sale.menu_sale_config"
+        sequence="50"/>
+
+    <menuitem
+        id="menu_sale_discount"
+        name="Customer Discounts"
+        parent="menu_sale_discount_root"
+        action="action_sale_discount"
+        sequence="10"/>
+
+</odoo>

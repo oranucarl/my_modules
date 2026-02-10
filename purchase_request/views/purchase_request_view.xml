@@ -503,13 +503,13 @@
         name="Purchase Requests"
         sequence="22"
         web_icon="purchase_request,static/description/icon.png"
-        groups="group_purchase_request_user,group_purchase_request_manager,group_purchase_request_administrator"
+        groups="group_purchase_request_viewer,group_purchase_request_user,group_purchase_request_manager,group_purchase_request_administrator"
     />
     <menuitem
         id="menu_purchase_request"
         name="Purchase Requests"
         parent="parent_menu_purchase_request"
-        groups="group_purchase_request_user,group_purchase_request_manager,group_purchase_request_administrator"
+        groups="group_purchase_request_viewer,group_purchase_request_user,group_purchase_request_manager,group_purchase_request_administrator"
     />
     <menuitem
         id="menu_purchase_request_act"

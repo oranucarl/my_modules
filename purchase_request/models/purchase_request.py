@@ -163,12 +163,7 @@ class PurchaseRequest(models.Model):
         string="Picking Type",
         required=True,
         default=_default_picking_type,
-        domain="[('code', '=', 'incoming'), ('id', 'in', allowed_picking_type_ids)]",
-    )
-    allowed_picking_type_ids = fields.Many2many(
-        comodel_name="stock.picking.type",
-        compute="_compute_allowed_picking_type_ids",
-        help="Picking types allowed for this user based on warehouse assignment.",
+        domain="[('code', '=', 'incoming')]",
     )
     group_id = fields.Many2one(
         comodel_name="procurement.group",
@@ -204,40 +199,6 @@ class PurchaseRequest(models.Model):
         compute="_compute_transfer_count",
         store=True,
     )
-
-    def _compute_allowed_picking_type_ids(self):
-        """Compute allowed picking types based on user's warehouse assignment.
-
-        Project Managers only see picking types from warehouses they are assigned to.
-        Warehouse Managers and Administrators see all picking types.
-        """
-        user = self.env.user
-        PickingType = self.env["stock.picking.type"]
-
-        # Check if user is Warehouse Manager or Administrator (they see all)
-        is_manager_or_admin = user.has_group(
-            "purchase_request.group_purchase_request_manager"
-        )
-
-        if is_manager_or_admin:
-            # Managers and Admins see all incoming picking types
-            allowed_types = PickingType.search([("code", "=", "incoming")])
-        else:
-            # Project Managers only see picking types from their assigned warehouses
-            assigned_warehouses = self.env["stock.warehouse"].search([
-                ("project_manager_id", "=", user.id)
-            ])
-            if assigned_warehouses:
-                allowed_types = PickingType.search([
-                    ("code", "=", "incoming"),
-                    ("warehouse_id", "in", assigned_warehouses.ids),
-                ])
-            else:
-                # If not assigned to any warehouse, show all (fallback)
-                allowed_types = PickingType.search([("code", "=", "incoming")])
-
-        for rec in self:
-            rec.allowed_picking_type_ids = allowed_types
 
     @api.depends("line_ids", "line_ids.estimated_cost")
     def _compute_estimated_cost(self):
@@ -337,17 +298,17 @@ class PurchaseRequest(models.Model):
     def _check_pr_creation_permission(self, user):
         """Check if user is allowed to create purchase requests.
 
-        Storekeepers (group_purchase_request_manager) cannot create PRs,
+        Warehouse Managers (group_purchase_request_manager) cannot create PRs,
         unless they are also PR Administrators.
         """
         # PR Administrators can always create
         if user.has_group("purchase_request.group_purchase_request_administrator"):
             return True
 
-        # Storekeepers cannot create PRs
+        # Warehouse Managers cannot create PRs
         if user.has_group("purchase_request.group_purchase_request_manager"):
             raise UserError(
-                _("Storekeepers are not allowed to create Purchase Requests.")
+                _("Warehouse Managers are not allowed to create Purchase Requests.")
             )
 
         return True

@@ -8,8 +8,11 @@
         <field name="sequence">10</field>
     </record>
     <!--
-        Access Rights Hierarchy (forms a selection field):
-        Storekeeper < Project Manager < Warehouse Manager < PR Administrator
+        Access Rights (separate groups, shown as checkboxes):
+        - Storekeeper: Read-only PR access, restricted to assigned warehouse
+        - Project Manager: Can create PRs, restricted to assigned warehouse
+        - Warehouse Manager: Can approve PRs, cannot create PRs
+        - PR Administrator: Full access
     -->
     <!-- Storekeeper - Read only access to PR, restricted inventory access to assigned warehouse -->
     <record id="group_purchase_request_viewer" model="res.groups">
@@ -17,31 +20,22 @@
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]" />
         <field name="category_id" ref="module_category_purchase_request" />
     </record>
-    <!-- Project Manager - Can create PRs, implies Storekeeper -->
+    <!-- Project Manager - Can create PRs -->
     <record id="group_purchase_request_user" model="res.groups">
         <field name="name">Project Manager</field>
-        <field
-            name="implied_ids"
-            eval="[(4, ref('purchase_request.group_purchase_request_viewer'))]"
-        />
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]" />
         <field name="category_id" ref="module_category_purchase_request" />
     </record>
-    <!-- Warehouse Manager - Can approve PRs, implies Project Manager -->
+    <!-- Warehouse Manager - Can approve PRs, cannot create PRs -->
     <record id="group_purchase_request_manager" model="res.groups">
         <field name="name">Warehouse Manager</field>
-        <field
-            name="implied_ids"
-            eval="[(4, ref('purchase_request.group_purchase_request_user'))]"
-        />
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]" />
         <field name="category_id" ref="module_category_purchase_request" />
     </record>
-    <!-- PR Administrator - Full access, implies Warehouse Manager -->
+    <!-- PR Administrator - Full access -->
     <record id="group_purchase_request_administrator" model="res.groups">
         <field name="name">PR Administrator</field>
-        <field
-            name="implied_ids"
-            eval="[(4, ref('purchase_request.group_purchase_request_manager'))]"
-        />
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]" />
         <field name="category_id" ref="module_category_purchase_request" />
     </record>
     <record model="ir.rule" id="purchase_request_comp_rule">
@@ -231,5 +225,15 @@
         <field name="domain_force">['|',
             ('location_id.warehouse_id.storekeeper_id', '=', user.id),
             ('location_dest_id.warehouse_id.storekeeper_id', '=', user.id)]</field>
+    </record>
+    <record id="storekeeper_picking_type_rule" model="ir.rule">
+        <field name="name">Storekeeper - Picking Type Access</field>
+        <field name="model_id" ref="stock.model_stock_picking_type" />
+        <field name="groups" eval="[(6,0, [ref('group_purchase_request_viewer')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">[('warehouse_id.storekeeper_id', '=', user.id)]</field>
     </record>
 </odoo>
