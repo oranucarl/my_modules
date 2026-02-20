@@ -142,6 +142,9 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
             "company_id": company.id,
             "group_id": group_id.id,
         }
+        # Set project_id from the warehouse linked to the picking type
+        if picking_type.warehouse_id and picking_type.warehouse_id.project_id:
+            data["project_id"] = picking_type.warehouse_id.project_id.id
         return data
 
     def create_allocation(self, po_line, pr_line, new_qty, alloc_uom):
