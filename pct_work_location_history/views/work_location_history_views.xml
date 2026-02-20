@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- List View -->
+    <record id="view_work_location_history_list" model="ir.ui.view">
+        <field name="name">hr.work.location.history.list</field>
+        <field name="model">hr.work.location.history</field>
+        <field name="arch" type="xml">
+            <list string="Work Location History" default_order="change_date desc">
+                <field name="employee_id"/>
+                <field name="department_id" optional="show"/>
+                <field name="previous_work_location_id" optional="show"/>
+                <field name="work_location_id"/>
+                <field name="change_date"/>
+                <field name="duration_display" string="Duration"/>
+                <field name="is_current" widget="boolean" optional="show"/>
+                <field name="changed_by_id"/>
+                <field name="company_id" optional="hide" groups="base.group_multi_company"/>
+                <field name="duration" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_work_location_history_form" model="ir.ui.view">
+        <field name="name">hr.work.location.history.form</field>
+        <field name="model">hr.work.location.history</field>
+        <field name="arch" type="xml">
+            <form string="Work Location History">
+                <sheet>
+                    <widget name="web_ribbon" title="Current" bg_color="text-bg-success" invisible="not is_current"/>
+                    <group>
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="department_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="previous_work_location_id"/>
+                            <field name="work_location_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="change_date"/>
+                            <field name="changed_by_id"/>
+                        </group>
+                        <group>
+                            <field name="duration_display" string="Duration"/>
+                            <field name="duration" string="Duration (Days)" widget="float"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_work_location_history_search" model="ir.ui.view">
+        <field name="name">hr.work.location.history.search</field>
+        <field name="model">hr.work.location.history</field>
+        <field name="arch" type="xml">
+            <search string="Work Location History">
+                <field name="employee_id"/>
+                <field name="work_location_id"/>
+                <field name="previous_work_location_id"/>
+                <field name="changed_by_id"/>
+                <field name="department_id"/>
+                <separator/>
+                <filter string="Current Location" name="current" domain="[('is_current', '=', True)]"/>
+                <separator/>
+                <filter string="Today" name="today" domain="[('change_date', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0))), ('change_date', '&lt;', datetime.datetime.combine(context_today() + relativedelta(days=1), datetime.time(0,0,0)))]"/>
+                <filter string="This Week" name="this_week" domain="[('change_date', '&gt;=', (context_today() + relativedelta(weekday=0, days=-6))), ('change_date', '&lt;', (context_today() + relativedelta(weekday=0, days=1)))]"/>
+                <filter string="This Month" name="this_month" domain="[('change_date', '&gt;=', (context_today()).strftime('%%Y-%%m-01')), ('change_date', '&lt;', (context_today() + relativedelta(months=1)).strftime('%%Y-%%m-01'))]"/>
+                <filter string="This Year" name="this_year" domain="[('change_date', '&gt;=', (context_today()).strftime('%%Y-01-01')), ('change_date', '&lt;', (context_today() + relativedelta(years=1)).strftime('%%Y-01-01'))]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Employee" name="group_employee" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Work Location" name="group_location" context="{'group_by': 'work_location_id'}"/>
+                    <filter string="Previous Location" name="group_prev_location" context="{'group_by': 'previous_work_location_id'}"/>
+                    <filter string="Changed By" name="group_changed_by" context="{'group_by': 'changed_by_id'}"/>
+                    <filter string="Department" name="group_department" context="{'group_by': 'department_id'}"/>
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                    <separator/>
+                    <filter string="Change Date" name="group_change_date" context="{'group_by': 'change_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Graph View -->
+    <record id="view_work_location_history_graph" model="ir.ui.view">
+        <field name="name">hr.work.location.history.graph</field>
+        <field name="model">hr.work.location.history</field>
+        <field name="arch" type="xml">
+            <graph string="Work Location History" type="bar" sample="1">
+                <field name="work_location_id"/>
+                <field name="employee_count" type="measure"/>
+                <field name="duration" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Pivot View -->
+    <record id="view_work_location_history_pivot" model="ir.ui.view">
+        <field name="name">hr.work.location.history.pivot</field>
+        <field name="model">hr.work.location.history</field>
+        <field name="arch" type="xml">
+            <pivot string="Work Location History" sample="1">
+                <field name="work_location_id" type="row"/>
+                <field name="employee_id" type="row"/>
+                <field name="change_date" type="col" interval="month"/>
+                <field name="employee_count" type="measure"/>
+                <field name="duration" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Action for Reporting Menu -->
+    <record id="action_work_location_history_report" model="ir.actions.act_window">
+        <field name="name">Work Location History</field>
+        <field name="res_model">hr.work.location.history</field>
+        <field name="view_mode">list,graph,pivot,form</field>
+        <field name="search_view_id" ref="view_work_location_history_search"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No work location history found.
+            </p>
+            <p>
+                Work location changes are automatically recorded when an employee's work location is updated.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item under Reporting (after Skills which has sequence 15) -->
+    <menuitem
+        id="menu_work_location_history_report"
+        name="Work Location History"
+        parent="hr.hr_menu_hr_reports"
+        action="action_work_location_history_report"
+        sequence="20"/>
+
+</odoo>

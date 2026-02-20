@@ -26,6 +26,9 @@ class PurchaseRequestCheckAvailabilityWizard(models.TransientModel):
         WizardLine = self.env["purchase.request.check.availability.wizard.line"]
         StockQuant = self.env["stock.quant"]
 
+        # Get the destination location from the PR's picking type
+        dest_location = self.purchase_request_id.picking_type_id.default_location_dest_id
+
         for pr_line in self.purchase_request_id.line_ids.filtered(
             lambda l: not l.cancelled and l.unfulfilled_qty > 0
         ):
@@ -44,6 +47,13 @@ class PurchaseRequestCheckAvailabilityWizard(models.TransientModel):
             locations_with_stock = {}
             for quant in quants:
                 location = quant.location_id
+                # Exclude the destination location (same warehouse destination)
+                if location == dest_location:
+                    continue
+                # Also exclude child locations of destination
+                if dest_location and location.parent_path and dest_location.parent_path:
+                    if location.parent_path.startswith(dest_location.parent_path):
+                        continue
                 if location not in locations_with_stock:
                     # Get available quantity (excluding reserved)
                     available = StockQuant._get_available_quantity(
@@ -82,17 +92,27 @@ class PurchaseRequestCheckAvailabilityWizard(models.TransientModel):
         if not lines_to_transfer:
             raise UserError(_("Please enter a transfer quantity for at least one line."))
 
-        # Validate quantities
+        # Validate quantities per line
         for line in lines_to_transfer:
             if line.transfer_qty > line.available_qty:
                 raise UserError(
                     _("Transfer quantity for %s exceeds available quantity (%s > %s).")
                     % (line.product_id.display_name, line.transfer_qty, line.available_qty)
                 )
-            if line.transfer_qty > line.requested_qty:
+
+        # Validate total transfer qty per PR line (product) doesn't exceed requested qty
+        pr_line_totals = {}
+        for line in lines_to_transfer:
+            pr_line = line.pr_line_id
+            if pr_line not in pr_line_totals:
+                pr_line_totals[pr_line] = 0.0
+            pr_line_totals[pr_line] += line.transfer_qty
+
+        for pr_line, total_qty in pr_line_totals.items():
+            if total_qty > pr_line.unfulfilled_qty:
                 raise UserError(
-                    _("Transfer quantity for %s exceeds requested quantity (%s > %s).")
-                    % (line.product_id.display_name, line.transfer_qty, line.requested_qty)
+                    _("Total transfer quantity for %s (%s) exceeds unfulfilled quantity (%s).")
+                    % (pr_line.product_id.display_name, total_qty, pr_line.unfulfilled_qty)
                 )
 
         # Create the transfer wizard
@@ -200,15 +220,44 @@ class PurchaseRequestCheckAvailabilityWizardLine(models.TransientModel):
 
     @api.onchange("location_id")
     def _onchange_location_id(self):
-        """Reset transfer_qty when location changes."""
+        """Reset transfer_qty when location changes and check if location is valid."""
         self.transfer_qty = 0.0
+        # Check if this is the destination location - if so, reset and warn
+        if self.location_id and self.wizard_id.purchase_request_id:
+            dest_location = self.wizard_id.purchase_request_id.picking_type_id.default_location_dest_id
+            if dest_location and self.location_id == dest_location:
+                return {
+                    "warning": {
+                        "title": _("Invalid Source Location"),
+                        "message": _("Cannot transfer from the destination location."),
+                    }
+                }
+
+    def _get_remaining_qty_for_pr_line(self):
+        """Calculate remaining quantity that can be transferred for this PR line."""
+        self.ensure_one()
+        if not self.pr_line_id:
+            return 0.0
+        # Sum transfer qty from other wizard lines with the same PR line
+        other_lines_qty = sum(
+            line.transfer_qty
+            for line in self.wizard_id.line_ids
+            if line.pr_line_id == self.pr_line_id and line.id != self.id
+        )
+        return max(0.0, self.requested_qty - other_lines_qty)
 
     @api.onchange("transfer_qty")
     def _onchange_transfer_qty(self):
-        """Validate transfer quantity doesn't exceed available or requested."""
-        if self.transfer_qty > self.available_qty:
-            self.transfer_qty = self.available_qty
-        if self.transfer_qty > self.requested_qty:
-            self.transfer_qty = self.requested_qty
+        """Validate transfer quantity doesn't exceed available or remaining requested."""
         if self.transfer_qty < 0:
             self.transfer_qty = 0.0
+            return
+
+        # Don't exceed available quantity at this location
+        if self.transfer_qty > self.available_qty:
+            self.transfer_qty = self.available_qty
+
+        # Don't exceed remaining requested quantity (considering other lines for same product)
+        remaining_qty = self._get_remaining_qty_for_pr_line()
+        if self.transfer_qty > remaining_qty:
+            self.transfer_qty = remaining_qty

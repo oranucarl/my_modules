@@ -129,7 +129,7 @@
                             <field
                                 name="estimated_cost"
                                 widget="monetary"
-                                readonly="is_editable == False"
+                                readonly="request_state in ('draft', 'to_approve', 'on_hold')"
                             />
                             <field name="currency_id" invisible="1" />
                             <field name="cancelled" />
@@ -580,9 +580,10 @@
                             <field
                                 name="estimated_cost"
                                 widget="monetary"
-                                readonly="is_editable == False"
+                                readonly="request_state in ('draft', 'to_approve', 'on_hold')"
                             />
                             <field name="currency_id" invisible="1" />
+                            <field name="request_state" invisible="1" />
                             <field name="cancelled" widget="boolean" />
                         </group>
                     </group>

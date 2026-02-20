@@ -86,71 +86,104 @@ class PurchaseRequestCreateTransferWizard(models.TransientModel):
         return False
 
     def action_create_transfer(self):
-        """Create stock.picking with stock.moves and link to PR."""
+        """Create stock.picking with stock.moves and link to PR.
+
+        Creates separate transfers for each source location to ensure
+        proper inventory tracking and transfer validation.
+        """
         self.ensure_one()
         if not self.line_ids:
             raise UserError(_("No lines to transfer."))
 
-        # Group lines by source location to potentially create multiple pickings
-        # or a single picking with moves from different locations
         StockPicking = self.env["stock.picking"]
         StockMove = self.env["stock.move"]
         Allocation = self.env["purchase.request.allocation"]
 
-        # Find the picking type
-        picking_type = self._find_internal_transfer_picking_type(
-            self.line_ids[0].source_location_id
-        )
-        if not picking_type:
-            raise UserError(
-                _("Could not find an internal transfer operation type for the selected warehouse.")
-            )
-
-        # Create a single picking for all lines
-        picking_vals = {
-            "picking_type_id": picking_type.id,
-            "location_id": self.line_ids[0].source_location_id.id,
-            "location_dest_id": self.dest_location_id.id,
-            "origin": self.purchase_request_id.name,
-            "company_id": self.purchase_request_id.company_id.id,
-        }
-        picking = StockPicking.create(picking_vals)
-
-        # Create stock moves for each line
+        # Group lines by source location
+        lines_by_location = {}
         for line in self.line_ids:
-            move_vals = {
-                "name": line.product_id.display_name,
-                "product_id": line.product_id.id,
-                "product_uom_qty": line.transfer_qty,
-                "product_uom": line.product_uom_id.id,
-                "picking_id": picking.id,
-                "location_id": line.source_location_id.id,
-                "location_dest_id": self.dest_location_id.id,
-                "company_id": self.purchase_request_id.company_id.id,
-                "created_purchase_request_line_id": line.pr_line_id.id,
-            }
-            move = StockMove.create(move_vals)
+            location = line.source_location_id
+            if location not in lines_by_location:
+                lines_by_location[location] = []
+            lines_by_location[location].append(line)
 
-            # Create allocation to link move to PR line
-            Allocation.create({
-                "purchase_request_line_id": line.pr_line_id.id,
-                "stock_move_id": move.id,
-                "requested_product_uom_qty": line.transfer_qty,
-            })
+        created_pickings = self.env["stock.picking"]
+
+        # Create a separate picking for each source location
+        for source_location, lines in lines_by_location.items():
+            # Find the picking type for this source location
+            picking_type = self._find_internal_transfer_picking_type(source_location)
+            if not picking_type:
+                raise UserError(
+                    _("Could not find an internal transfer operation type for warehouse of location '%s'.")
+                    % source_location.display_name
+                )
+
+            # Create picking for this source location
+            picking_vals = {
+                "picking_type_id": picking_type.id,
+                "location_id": source_location.id,
+                "location_dest_id": self.dest_location_id.id,
+                "origin": self.purchase_request_id.name,
+                "company_id": self.purchase_request_id.company_id.id,
+            }
+            picking = StockPicking.create(picking_vals)
+            created_pickings |= picking
+
+            # Create stock moves for lines from this source location
+            for line in lines:
+                move_vals = {
+                    "name": line.product_id.display_name,
+                    "product_id": line.product_id.id,
+                    "product_uom_qty": line.transfer_qty,
+                    "product_uom": line.product_uom_id.id,
+                    "picking_id": picking.id,
+                    "location_id": source_location.id,
+                    "location_dest_id": self.dest_location_id.id,
+                    "company_id": self.purchase_request_id.company_id.id,
+                    "created_purchase_request_line_id": line.pr_line_id.id,
+                }
+                move = StockMove.create(move_vals)
+
+                # Create allocation to link move to PR line
+                Allocation.create({
+                    "purchase_request_line_id": line.pr_line_id.id,
+                    "stock_move_id": move.id,
+                    "requested_product_uom_qty": line.transfer_qty,
+                })
+
+        # Force recomputation of PR line quantities after creating allocations
+        pr_lines = self.line_ids.mapped("pr_line_id")
+        # Invalidate cache to ensure fresh computation
+        pr_lines.invalidate_recordset(["qty_in_transfer", "unfulfilled_qty"])
+        # Trigger recomputation by accessing the computed fields
+        for pr_line in pr_lines:
+            pr_line._compute_transfer_qty()
+            pr_line._compute_unfulfilled_qty()
 
         # Update PR state to in_progress if not already
         if self.purchase_request_id.state == "approved":
             self.purchase_request_id.button_in_progress()
 
-        # Return action to view the created picking
-        return {
-            "name": _("Internal Transfer"),
-            "type": "ir.actions.act_window",
-            "res_model": "stock.picking",
-            "view_mode": "form",
-            "res_id": picking.id,
-            "target": "current",
-        }
+        # Return action to view the created picking(s)
+        if len(created_pickings) == 1:
+            return {
+                "name": _("Internal Transfer"),
+                "type": "ir.actions.act_window",
+                "res_model": "stock.picking",
+                "view_mode": "form",
+                "res_id": created_pickings.id,
+                "target": "current",
+            }
+        else:
+            return {
+                "name": _("Internal Transfers"),
+                "type": "ir.actions.act_window",
+                "res_model": "stock.picking",
+                "view_mode": "list,form",
+                "domain": [("id", "in", created_pickings.ids)],
+                "target": "current",
+            }
 
 
 class PurchaseRequestCreateTransferWizardLine(models.TransientModel):

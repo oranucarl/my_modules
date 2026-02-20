@@ -24,3 +24,16 @@ class StockWarehouse(models.Model):
         help="Storekeeper assigned to this warehouse. "
         "This user has read-only access to PRs and restricted access to warehouse inventory.",
     )
+    project_id = fields.Many2one(
+        comodel_name="project.project",
+        string="Project",
+        help="Project linked to this warehouse. "
+        "The project's analytic account will be used for purchase requests.",
+    )
+
+    @api.model
+    def _get_warehouse_from_project(self, project):
+        """Find the warehouse linked to a specific project."""
+        if not project:
+            return False
+        return self.search([("project_id", "=", project.id)], limit=1)

@@ -133,3 +133,42 @@ class PurchaseRequestAllocation(models.Model):
                 body=Markup(message),
                 subtype_id=self.env.ref("mail.mt_note").id,
             )
+
+    def _trigger_pr_line_recompute(self, pr_lines=None):
+        """Trigger recomputation of PR line quantities."""
+        if pr_lines is None:
+            pr_lines = self.mapped("purchase_request_line_id")
+        if pr_lines:
+            # Invalidate cache and trigger recomputation
+            pr_lines.invalidate_recordset(["qty_in_transfer", "unfulfilled_qty", "purchased_qty"])
+            pr_lines._compute_transfer_qty()
+            pr_lines._compute_unfulfilled_qty()
+            pr_lines._compute_purchased_qty()
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        allocations = super().create(vals_list)
+        # Trigger recomputation on related PR lines
+        allocations._trigger_pr_line_recompute()
+        return allocations
+
+    def write(self, vals):
+        # Get PR lines before write (in case purchase_request_line_id changes)
+        pr_lines_before = self.mapped("purchase_request_line_id")
+        res = super().write(vals)
+        # Get PR lines after write
+        pr_lines_after = self.mapped("purchase_request_line_id")
+        # Trigger recomputation on all affected PR lines
+        self._trigger_pr_line_recompute(pr_lines_before | pr_lines_after)
+        return res
+
+    def unlink(self):
+        pr_lines = self.mapped("purchase_request_line_id")
+        res = super().unlink()
+        # Trigger recomputation on PR lines after unlinking
+        if pr_lines:
+            pr_lines.invalidate_recordset(["qty_in_transfer", "unfulfilled_qty", "purchased_qty"])
+            pr_lines._compute_transfer_qty()
+            pr_lines._compute_unfulfilled_qty()
+            pr_lines._compute_purchased_qty()
+        return res

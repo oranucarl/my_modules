@@ -17,6 +17,11 @@
                     icon="fa-folder-open-o"
                 />
             </xpath>
+            <!-- Add picking_type_id and project_id fields for bidirectional sync -->
+            <xpath expr="//page[@name='purchase_delivery_invoice']//group[@name='other_info']" position="inside">
+                <field name="picking_type_id" />
+                <field name="project_id" />
+            </xpath>
         </field>
     </record>
     <record id="purchase_order_line_form2" model="ir.ui.view">

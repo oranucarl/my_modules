@@ -10,6 +10,40 @@ from odoo.tools import html_escape
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
+    @api.onchange("picking_type_id")
+    def _onchange_picking_type_id_project_sync(self):
+        """Sync project_id based on warehouse's linked project when picking_type_id changes."""
+        if self.picking_type_id and self.picking_type_id.warehouse_id:
+            warehouse = self.picking_type_id.warehouse_id
+            if warehouse.project_id:
+                self.project_id = warehouse.project_id
+
+    @api.onchange("project_id")
+    def _onchange_project_id_picking_type_sync(self):
+        """Sync picking_type_id and analytic distribution based on project when project_id changes."""
+        if self.project_id:
+            # Find warehouse linked to this project
+            warehouse = self.env["stock.warehouse"].search(
+                [("project_id", "=", self.project_id.id)], limit=1
+            )
+            if warehouse:
+                # Find incoming picking type for this warehouse
+                picking_type = self.env["stock.picking.type"].search(
+                    [
+                        ("code", "=", "incoming"),
+                        ("warehouse_id", "=", warehouse.id),
+                    ],
+                    limit=1,
+                )
+                if picking_type:
+                    self.picking_type_id = picking_type
+            # Set analytic distribution on order lines from project's analytic account
+            if self.project_id.account_id:
+                analytic_account = self.project_id.account_id
+                for line in self.order_line:
+                    if not line.display_type:  # Skip section and note lines
+                        line.analytic_distribution = {str(analytic_account.id): 100.0}
+
     def _purchase_request_confirm_message_content(self, request, request_dict=None):
         self.ensure_one()
         if not request_dict:

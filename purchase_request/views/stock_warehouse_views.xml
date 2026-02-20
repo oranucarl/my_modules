@@ -10,6 +10,7 @@
             <!-- Add project_manager_id after partner_id (address) -->
             <field name="partner_id" position="after">
                 <field name="project_manager_id" />
+                <field name="project_id" />
             </field>
             <!-- Add storekeeper_id after code -->
             <field name="code" position="after">

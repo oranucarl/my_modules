@@ -105,7 +105,7 @@ class PurchaseRequest(models.Model):
     )
     assigned_to = fields.Many2one(
         comodel_name="res.users",
-        string="Approver",
+        string="Approved by",
         tracking=True,
         domain=lambda self: [
             (
@@ -115,6 +115,8 @@ class PurchaseRequest(models.Model):
             )
         ],
         index=True,
+        readonly=True,
+        copy=False,
     )
     description = fields.Text()
     on_hold_reason = fields.Text(
@@ -399,7 +401,7 @@ class PurchaseRequest(models.Model):
         return self.write({"state": "to_approve"})
 
     def button_approved(self):
-        return self.write({"state": "approved"})
+        return self.write({"state": "approved", "assigned_to": self.env.uid})
 
     def button_rejected(self):
         self.mapped("line_ids").do_cancel()
@@ -532,3 +534,13 @@ class PurchaseRequest(models.Model):
             )
             if all_fulfilled and pr.line_ids:
                 pr.button_done()
+
+    @api.onchange("picking_type_id")
+    def _onchange_picking_type_id(self):
+        """Set analytic account on PR lines based on project linked to warehouse."""
+        if self.picking_type_id and self.picking_type_id.warehouse_id:
+            warehouse = self.picking_type_id.warehouse_id
+            if warehouse.project_id and warehouse.project_id.account_id:
+                analytic_account = warehouse.project_id.account_id
+                for line in self.line_ids:
+                    line.analytic_distribution = {str(analytic_account.id): 100.0}

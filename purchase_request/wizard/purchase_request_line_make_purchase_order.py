@@ -100,7 +100,9 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
         self._check_valid_request_line(request_line_ids)
         self.check_group(request_lines)
         for line in request_lines:
-            items.append([0, 0, self._prepare_item(line)])
+            # Only include lines with unfulfilled quantity > 0
+            if line.unfulfilled_qty > 0:
+                items.append([0, 0, self._prepare_item(line)])
         return items
 
     @api.model
