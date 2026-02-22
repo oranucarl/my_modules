@@ -32,6 +32,9 @@ class HrEmployee(models.Model):
                         'previous_work_location_id': old_location_id,
                         'change_date': fields.Datetime.now(),
                         'changed_by_id': self.env.user.id,
+                        'department_id': employee.department_id.id if employee.department_id else False,
+                        'job_id': employee.job_id.id if employee.job_id else False,
+                        'manager_id': employee.parent_id.id if employee.parent_id else False,
                     })
         return super().write(vals)
 
@@ -46,6 +49,9 @@ class HrEmployee(models.Model):
                     'previous_work_location_id': False,
                     'change_date': fields.Datetime.now(),
                     'changed_by_id': self.env.user.id,
+                    'department_id': employee.department_id.id if employee.department_id else False,
+                    'job_id': employee.job_id.id if employee.job_id else False,
+                    'manager_id': employee.parent_id.id if employee.parent_id else False,
                 })
         return employees
 

@@ -45,9 +45,25 @@ class WorkLocationHistory(models.Model):
         index=True,
     )
     department_id = fields.Many2one(
-        related='employee_id.department_id',
+        'hr.department',
         string='Department',
-        store=True,
+        ondelete='set null',
+        readonly=True,
+        help='Department at the time of location change',
+    )
+    job_id = fields.Many2one(
+        'hr.job',
+        string='Job Position',
+        ondelete='set null',
+        readonly=True,
+        help='Job position at the time of location change',
+    )
+    manager_id = fields.Many2one(
+        'hr.employee',
+        string='Line Manager',
+        ondelete='set null',
+        readonly=True,
+        help='Line manager at the time of location change',
     )
     duration = fields.Float(
         string='Duration (Days)',
@@ -83,6 +99,43 @@ class WorkLocationHistory(models.Model):
                 ('employee_id', '=', record.employee_id.id),
             ], order='change_date desc', limit=1)
             record.is_current = latest.id == record.id
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        # Recompute is_current for all records of the affected employees
+        employee_ids = records.mapped('employee_id').ids
+        if employee_ids:
+            all_employee_records = self.search([('employee_id', 'in', employee_ids)])
+            all_employee_records._compute_is_current()
+        return records
+
+    def write(self, vals):
+        # Track employees before write if change_date or employee_id is being modified
+        affected_employee_ids = set()
+        if 'change_date' in vals or 'employee_id' in vals:
+            affected_employee_ids.update(self.mapped('employee_id').ids)
+
+        result = super().write(vals)
+
+        # If change_date or employee_id changed, recompute is_current for affected employees
+        if 'change_date' in vals or 'employee_id' in vals:
+            affected_employee_ids.update(self.mapped('employee_id').ids)
+            if affected_employee_ids:
+                all_employee_records = self.search([('employee_id', 'in', list(affected_employee_ids))])
+                all_employee_records._compute_is_current()
+
+        return result
+
+    def unlink(self):
+        # Track affected employees before deletion
+        employee_ids = self.mapped('employee_id').ids
+        result = super().unlink()
+        # Recompute is_current for remaining records of affected employees
+        if employee_ids:
+            remaining_records = self.search([('employee_id', 'in', employee_ids)])
+            remaining_records._compute_is_current()
+        return result
 
     @api.depends('employee_id', 'change_date', 'is_current')
     def _compute_duration(self):

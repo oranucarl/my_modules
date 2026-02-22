@@ -21,5 +21,8 @@ def post_init_hook(env):
                 'previous_work_location_id': False,
                 'change_date': employee.write_date or employee.create_date,
                 'changed_by_id': SUPERUSER_ID,
+                'department_id': employee.department_id.id if employee.department_id else False,
+                'job_id': employee.job_id.id if employee.job_id else False,
+                'manager_id': employee.parent_id.id if employee.parent_id else False,
                 'notes': 'Initial work location (created by module installation)',
             })

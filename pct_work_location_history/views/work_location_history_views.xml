@@ -9,12 +9,12 @@
             <list string="Work Location History" default_order="change_date desc">
                 <field name="employee_id"/>
                 <field name="department_id" optional="show"/>
+                <field name="manager_id" string="Line Manager" optional="show"/>
                 <field name="previous_work_location_id" optional="show"/>
                 <field name="work_location_id"/>
                 <field name="change_date"/>
                 <field name="duration_display" string="Duration"/>
                 <field name="is_current" widget="boolean" optional="show"/>
-                <field name="changed_by_id"/>
                 <field name="company_id" optional="hide" groups="base.group_multi_company"/>
                 <field name="duration" optional="hide"/>
             </list>
@@ -30,22 +30,24 @@
                 <sheet>
                     <widget name="web_ribbon" title="Current" bg_color="text-bg-success" invisible="not is_current"/>
                     <group>
-                        <group>
+                        <group string="Employee Information">
                             <field name="employee_id"/>
-                            <field name="department_id"/>
+                            <field name="department_id" readonly="1"/>
+                            <field name="job_id" string="Job Position" readonly="1"/>
+                            <field name="manager_id" string="Line Manager" readonly="1"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
-                        <group>
+                        <group string="Location Details">
                             <field name="previous_work_location_id"/>
                             <field name="work_location_id"/>
                         </group>
                     </group>
                     <group>
-                        <group>
+                        <group string="Change Information">
                             <field name="change_date"/>
-                            <field name="changed_by_id"/>
+                            <field name="changed_by_id" readonly="1"/>
                         </group>
-                        <group>
+                        <group string="Duration">
                             <field name="duration_display" string="Duration"/>
                             <field name="duration" string="Duration (Days)" widget="float"/>
                         </group>
@@ -69,6 +71,8 @@
                 <field name="previous_work_location_id"/>
                 <field name="changed_by_id"/>
                 <field name="department_id"/>
+                <field name="job_id" string="Job Position"/>
+                <field name="manager_id" string="Line Manager"/>
                 <separator/>
                 <filter string="Current Location" name="current" domain="[('is_current', '=', True)]"/>
                 <separator/>
@@ -83,6 +87,8 @@
                     <filter string="Previous Location" name="group_prev_location" context="{'group_by': 'previous_work_location_id'}"/>
                     <filter string="Changed By" name="group_changed_by" context="{'group_by': 'changed_by_id'}"/>
                     <filter string="Department" name="group_department" context="{'group_by': 'department_id'}"/>
+                    <filter string="Job Position" name="group_job" context="{'group_by': 'job_id'}"/>
+                    <filter string="Line Manager" name="group_manager" context="{'group_by': 'manager_id'}"/>
                     <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
                     <separator/>
                     <filter string="Change Date" name="group_change_date" context="{'group_by': 'change_date:month'}"/>
