@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class PctPettyCashAllocationWizard(models.TransientModel):
@@ -21,22 +21,16 @@ class PctPettyCashAllocationWizard(models.TransientModel):
     currency_id = fields.Many2one(
         related='petty_cash_id.currency_id',
     )
-    payment_date = fields.Date(
-        string='Payment Date',
-        required=True,
+    request_date = fields.Date(
+        string='Request Date',
+        readonly=True,
         default=fields.Date.context_today,
+        help='Date the allocation request is created (auto-set)',
     )
     amount = fields.Monetary(
         string='Amount Requested',
         currency_field='currency_id',
         required=True,
-    )
-    source_journal_id = fields.Many2one(
-        'account.journal',
-        string='Source Journal',
-        required=True,
-        domain="[('type', 'in', ['bank', 'cash']), ('company_id', '=', company_id)]",
-        help='Company bank/cash journal from which payment will be made',
     )
 
     @api.model
@@ -50,6 +44,34 @@ class PctPettyCashAllocationWizard(models.TransientModel):
         ], limit=1)
         return petty_cash.id if petty_cash else False
 
+    @api.constrains('analytic_distribution')
+    def _check_analytic_distribution(self):
+        """Validate that analytic distribution is set"""
+        for wizard in self:
+            if not wizard.analytic_distribution:
+                raise ValidationError(_('Analytic distribution is required for allocation requests.'))
+
+    def _send_allocation_notification(self, allocation):
+        """Send email notification to accounting team for new allocation"""
+        notification_email = self.env['ir.config_parameter'].sudo().get_param(
+            'pct_petty_cash.notification_email'
+        )
+        if not notification_email:
+            return
+
+        template = self.env.ref('pct_petty_cash.mail_template_allocation_notification', raise_if_not_found=False)
+        if template:
+            # Generate email values from template
+            email_values = {
+                'email_to': notification_email,
+                'email_from': self.env.company.email or self.env.user.email_formatted,
+            }
+            template.send_mail(
+                allocation.id,
+                force_send=True,
+                email_values=email_values,
+            )
+
     def action_create_allocation(self):
         """Create allocation line from wizard"""
         self.ensure_one()
@@ -57,15 +79,19 @@ class PctPettyCashAllocationWizard(models.TransientModel):
             raise UserError(_('Cannot add allocations to a closed petty cash.'))
         if self.amount <= 0:
             raise UserError(_('Amount must be greater than zero.'))
+        if not self.analytic_distribution:
+            raise UserError(_('Analytic distribution is required for allocation requests.'))
 
         allocation_vals = {
             'petty_cash_id': self.petty_cash_id.id,
-            'payment_date': self.payment_date,
+            'request_date': self.request_date or fields.Date.context_today(self),
             'amount': self.amount,
-            'source_journal_id': self.source_journal_id.id,
             'analytic_distribution': self.analytic_distribution,
         }
-        self.env['pct.petty.cash.allocation'].create(allocation_vals)
+        allocation = self.env['pct.petty.cash.allocation'].create(allocation_vals)
+
+        # Send notification email to accounting team
+        self._send_allocation_notification(allocation)
 
         return {
             'type': 'ir.actions.act_window',

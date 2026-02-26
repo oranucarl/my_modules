@@ -18,6 +18,11 @@
                             <field name="petty_cash_require_analytic"/>
                         </setting>
                     </block>
+                    <block title="Notifications">
+                        <setting string="Accounting Team Email" help="Email address to notify when allocations or expenses are created">
+                            <field name="petty_cash_notification_email" placeholder="e.g. accounting@company.com"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

@@ -18,14 +18,15 @@
                                groups="!pct_petty_cash.group_petty_cash_accountant"/>
                     </group>
                     <group>
-                        <field name="year"/>
+                        <field name="date_from"/>
+                        <field name="date_to"/>
                     </group>
                 </group>
                 <notebook>
                     <page string="Allocations" name="allocations">
                         <field name="allocation_line_ids" nolabel="1">
                             <list string="Allocations" create="0" edit="0">
-                                <field name="payment_date"/>
+                                <field name="request_date"/>
                                 <field name="petty_cash_id"/>
                                 <field name="amount" sum="Total Allocated"/>
                                 <field name="source_journal_id"/>
@@ -115,7 +116,7 @@
 
                     <div class="report-title">Petty Cash Report</div>
                     <div class="report-subtitle">
-                        Custodian: <t t-esc="custodian_name"/> | Year: <t t-esc="year"/>
+                        Custodian: <t t-esc="custodian_name"/> | Period: <t t-esc="period"/>
                     </div>
 
                     <!-- Summary -->
@@ -144,7 +145,7 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Date</th>
+                                <th>Request Date</th>
                                 <th>Petty Cash</th>
                                 <th>Custodian</th>
                                 <th>Source Journal</th>
@@ -155,7 +156,7 @@
                         <tbody>
                             <t t-foreach="allocations" t-as="alloc">
                                 <tr>
-                                    <td><t t-esc="alloc.payment_date"/></td>
+                                    <td><t t-esc="alloc.request_date"/></td>
                                     <td><t t-esc="alloc.petty_cash_id.name"/></td>
                                     <td><t t-esc="alloc.petty_cash_id.custodian_id.name"/></td>
                                     <td><t t-esc="alloc.source_journal_id.name"/></td>

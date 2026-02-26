@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Email Template for Allocation Request Notification -->
+    <record id="mail_template_allocation_notification" model="mail.template">
+        <field name="name">Petty Cash: Allocation Request Notification</field>
+        <field name="model_id" ref="pct_petty_cash.model_pct_petty_cash_allocation"/>
+        <field name="subject">New Petty Cash Allocation Request - {{ object.petty_cash_id.name }}</field>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif;">
+    <table border="0" cellpadding="0" cellspacing="0" style="padding-top: 16px; background-color: #F1F1F1; width: 100%;">
+        <tr>
+            <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="590" style="background-color: white; padding: 20px;">
+                    <tr>
+                        <td>
+                            <h2 style="color: #875A7B; margin: 0 0 20px 0;">New Allocation Request</h2>
+                            <p style="margin: 0 0 10px 0;">A new petty cash allocation request has been submitted and requires your attention.</p>
+
+                            <table style="width: 100%; margin: 20px 0; border-collapse: collapse;">
+                                <tr style="background-color: #875A7B; color: white;">
+                                    <th colspan="2" style="padding: 10px; text-align: left;">Request Details</th>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 10px; font-weight: bold; width: 40%;">Petty Cash:</td>
+                                    <td style="padding: 10px;">{{ object.petty_cash_id.name }}</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 10px; font-weight: bold;">Custodian:</td>
+                                    <td style="padding: 10px;">{{ object.petty_cash_id.custodian_id.name }}</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 10px; font-weight: bold;">Request Date:</td>
+                                    <td style="padding: 10px;">{{ object.request_date }}</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 10px; font-weight: bold;">Amount Requested:</td>
+                                    <td style="padding: 10px; font-size: 16px; color: #875A7B; font-weight: bold;">
+                                        {{ object.currency_id.symbol }} {{ "%.2f"|format(object.amount) }}
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 20px 0 10px 0;">Please review and process this allocation request in the system.</p>
+
+                            <p style="margin: 20px 0 0 0; color: #888; font-size: 12px;">
+                                This is an automated notification from the Petty Cash Management system.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+    <!-- Email Template for Expense Record Notification -->
+    <record id="mail_template_expense_notification" model="mail.template">
+        <field name="name">Petty Cash: Expense Record Notification</field>
+        <field name="model_id" ref="pct_petty_cash.model_pct_petty_cash_expense"/>
+        <field name="subject">New Petty Cash Expense Recorded - {{ object.petty_cash_id.name }}</field>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif;">
+    <table border="0" cellpadding="0" cellspacing="0" style="padding-top: 16px; background-color: #F1F1F1; width: 100%;">
+        <tr>
+            <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="590" style="background-color: white; padding: 20px;">
+                    <tr>
+                        <td>
+                            <h2 style="color: #875A7B; margin: 0 0 20px 0;">New Expense Recorded</h2>
+                            <p style="margin: 0 0 10px 0;">A new petty cash expense has been recorded and requires your attention.</p>
+
+                            <table style="width: 100%; margin: 20px 0; border-collapse: collapse;">
+                                <tr style="background-color: #875A7B; color: white;">
+                                    <th colspan="2" style="padding: 10px; text-align: left;">Expense Details</th>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 10px; font-weight: bold; width: 40%;">Petty Cash:</td>
+                                    <td style="padding: 10px;">{{ object.petty_cash_id.name }}</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 10px; font-weight: bold;">Custodian:</td>
+                                    <td style="padding: 10px;">{{ object.petty_cash_id.custodian_id.name }}</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 10px; font-weight: bold;">Expense Date:</td>
+                                    <td style="padding: 10px;">{{ object.expense_date }}</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 10px; font-weight: bold;">Description/Purpose:</td>
+                                    <td style="padding: 10px;">{{ object.description }}</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 10px; font-weight: bold;">Amount Spent:</td>
+                                    <td style="padding: 10px; font-size: 16px; color: #875A7B; font-weight: bold;">
+                                        {{ object.currency_id.symbol }} {{ "%.2f"|format(object.amount) }}
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 20px 0 10px 0;">Please review and process this expense in the system.</p>
+
+                            <p style="margin: 20px 0 0 0; color: #888; font-size: 12px;">
+                                This is an automated notification from the Petty Cash Management system.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+</odoo>

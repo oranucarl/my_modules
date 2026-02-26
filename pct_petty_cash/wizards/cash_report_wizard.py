@@ -22,10 +22,13 @@ class PctCashReportWizard(models.TransientModel):
         string='Custodian',
         help='Filter by custodian. Leave empty to show all.',
     )
-    year = fields.Selection(
-        selection='_get_year_selection',
-        string='Year',
-        help='Filter by year. Leave empty to show all years.',
+    date_from = fields.Date(
+        string='Date From',
+        help='Start date of the report period. Leave empty for no start date filter.',
+    )
+    date_to = fields.Date(
+        string='Date To',
+        help='End date of the report period. Leave empty for no end date filter.',
     )
 
     # Lines for display and selection
@@ -70,46 +73,15 @@ class PctCashReportWizard(models.TransientModel):
         compute='_compute_summary',
     )
 
-    @api.model
-    def _get_year_selection(self):
-        """Generate year selection based on years with actual records"""
-        years = set()
-
-        # Get years from allocations
-        self.env.cr.execute("""
-            SELECT DISTINCT EXTRACT(YEAR FROM payment_date)::INTEGER as year
-            FROM pct_petty_cash_allocation
-            WHERE payment_date IS NOT NULL
-        """)
-        for row in self.env.cr.fetchall():
-            if row[0]:
-                years.add(row[0])
-
-        # Get years from expenses
-        self.env.cr.execute("""
-            SELECT DISTINCT EXTRACT(YEAR FROM expense_date)::INTEGER as year
-            FROM pct_petty_cash_expense
-            WHERE expense_date IS NOT NULL
-        """)
-        for row in self.env.cr.fetchall():
-            if row[0]:
-                years.add(row[0])
-
-        # Always include current year even if no records yet
-        years.add(date.today().year)
-
-        # Sort and return as selection
-        return [(str(year), str(year)) for year in sorted(years)]
-
     def _get_allocation_domain(self):
         """Build domain for allocations based on filters"""
         domain = []
         if self.custodian_id:
             domain.append(('petty_cash_id.custodian_id', '=', self.custodian_id.id))
-        if self.year:
-            year_int = int(self.year)
-            domain.append(('payment_date', '>=', date(year_int, 1, 1)))
-            domain.append(('payment_date', '<=', date(year_int, 12, 31)))
+        if self.date_from:
+            domain.append(('request_date', '>=', self.date_from))
+        if self.date_to:
+            domain.append(('request_date', '<=', self.date_to))
         # Apply user access restriction for regular users
         if not self.env.user.has_group('pct_petty_cash.group_petty_cash_accountant'):
             domain.append(('petty_cash_id.custodian_id', '=', self.env.user.id))
@@ -120,16 +92,16 @@ class PctCashReportWizard(models.TransientModel):
         domain = []
         if self.custodian_id:
             domain.append(('petty_cash_id.custodian_id', '=', self.custodian_id.id))
-        if self.year:
-            year_int = int(self.year)
-            domain.append(('expense_date', '>=', date(year_int, 1, 1)))
-            domain.append(('expense_date', '<=', date(year_int, 12, 31)))
+        if self.date_from:
+            domain.append(('expense_date', '>=', self.date_from))
+        if self.date_to:
+            domain.append(('expense_date', '<=', self.date_to))
         # Apply user access restriction for regular users
         if not self.env.user.has_group('pct_petty_cash.group_petty_cash_accountant'):
             domain.append(('petty_cash_id.custodian_id', '=', self.env.user.id))
         return domain
 
-    @api.depends('allocation_line_ids', 'expense_line_ids', 'custodian_id', 'year')
+    @api.depends('allocation_line_ids', 'expense_line_ids', 'custodian_id', 'date_from', 'date_to')
     def _compute_summary(self):
         """Compute summary totals"""
         for wizard in self:
@@ -182,7 +154,7 @@ class PctCashReportWizard(models.TransientModel):
 
         return res
 
-    @api.onchange('custodian_id', 'year')
+    @api.onchange('custodian_id', 'date_from', 'date_to')
     def _onchange_filters(self):
         """Update lines when filters change"""
         allocation_domain = self._get_allocation_domain()
@@ -243,8 +215,12 @@ class PctCashReportWizard(models.TransientModel):
         title = 'Petty Cash Report'
         if self.custodian_id:
             title += f' - {self.custodian_id.name}'
-        if self.year:
-            title += f' ({self.year})'
+        if self.date_from and self.date_to:
+            title += f' ({self.date_from.strftime("%Y-%m-%d")} to {self.date_to.strftime("%Y-%m-%d")})'
+        elif self.date_from:
+            title += f' (From {self.date_from.strftime("%Y-%m-%d")})'
+        elif self.date_to:
+            title += f' (To {self.date_to.strftime("%Y-%m-%d")})'
 
         # Allocations Sheet
         alloc_sheet = workbook.add_worksheet('Allocations')
@@ -252,7 +228,7 @@ class PctCashReportWizard(models.TransientModel):
         alloc_sheet.set_row(0, 25)
 
         # Allocations headers
-        alloc_headers = ['Date', 'Petty Cash', 'Custodian', 'Amount', 'Source Journal', 'Status', 'Journal Entry']
+        alloc_headers = ['Request Date', 'Petty Cash', 'Custodian', 'Amount', 'Source Journal', 'Status', 'Journal Entry']
         for col, header in enumerate(alloc_headers):
             alloc_sheet.write(2, col, header, header_format)
 
@@ -260,7 +236,7 @@ class PctCashReportWizard(models.TransientModel):
         row = 3
         total_allocated = 0
         for alloc in allocations:
-            alloc_sheet.write(row, 0, alloc.payment_date.strftime('%Y-%m-%d') if alloc.payment_date else '', date_format)
+            alloc_sheet.write(row, 0, alloc.request_date.strftime('%Y-%m-%d') if alloc.request_date else '', date_format)
             alloc_sheet.write(row, 1, alloc.petty_cash_id.name or '', cell_format)
             alloc_sheet.write(row, 2, alloc.petty_cash_id.custodian_id.name or '', cell_format)
             alloc_sheet.write(row, 3, alloc.amount or 0, money_format)
@@ -349,8 +325,10 @@ class PctCashReportWizard(models.TransientModel):
         filename = f'petty_cash_report'
         if self.custodian_id:
             filename += f'_{self.custodian_id.name.replace(" ", "_")}'
-        if self.year:
-            filename += f'_{self.year}'
+        if self.date_from:
+            filename += f'_from_{self.date_from.strftime("%Y%m%d")}'
+        if self.date_to:
+            filename += f'_to_{self.date_to.strftime("%Y%m%d")}'
         filename += '.xlsx'
 
         attachment = self.env['ir.attachment'].create({
@@ -377,10 +355,19 @@ class PctCashReportWizard(models.TransientModel):
         if not allocations and not expenses:
             raise UserError(_('No records to export. Please adjust your filters.'))
 
+        # Build period string
+        period_str = 'All Dates'
+        if self.date_from and self.date_to:
+            period_str = f'{self.date_from.strftime("%Y-%m-%d")} to {self.date_to.strftime("%Y-%m-%d")}'
+        elif self.date_from:
+            period_str = f'From {self.date_from.strftime("%Y-%m-%d")}'
+        elif self.date_to:
+            period_str = f'To {self.date_to.strftime("%Y-%m-%d")}'
+
         data = {
             'wizard_id': self.id,
             'custodian_name': self.custodian_id.name if self.custodian_id else 'All Custodians',
-            'year': self.year or 'All Years',
+            'period': period_str,
             'allocation_ids': allocations.ids,
             'expense_ids': expenses.ids,
             'amount_brought_forward': self.amount_brought_forward,
@@ -421,5 +408,5 @@ class PctCashReportPdf(models.AbstractModel):
             'total_expensed': total_expensed,
             'balance': amount_brought_forward + total_allocated - total_expensed,
             'custodian_name': data.get('custodian_name', 'All Custodians'),
-            'year': data.get('year', 'All Years'),
+            'period': data.get('period', 'All Dates'),
         }

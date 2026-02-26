@@ -55,9 +55,22 @@ class PctPettyCash(models.Model):
         string='Petty Cash Journal',
         required=True,
         domain="[('type', '=', 'cash'), ('company_id', '=', company_id)]",
+        default=lambda self: self._get_default_journal(),
         tracking=True,
         help='Cash journal for custodian transactions',
     )
+
+    @api.model
+    def _get_default_journal(self):
+        """Get default journal from settings"""
+        default_journal_id = self.env['ir.config_parameter'].sudo().get_param(
+            'pct_petty_cash.default_journal_id'
+        )
+        if default_journal_id:
+            journal = self.env['account.journal'].browse(int(default_journal_id))
+            if journal.exists() and journal.company_id == self.env.company:
+                return journal
+        return False
     custodian_account_id = fields.Many2one(
         'account.account',
         string='Custodian Account',
@@ -120,7 +133,7 @@ class PctPettyCash(models.Model):
     @api.depends(
         'allocation_line_ids.amount',
         'allocation_line_ids.state',
-        'allocation_line_ids.payment_date',
+        'allocation_line_ids.request_date',
         'expense_line_ids.amount',
         'expense_line_ids.state',
         'expense_line_ids.expense_date',
@@ -131,8 +144,8 @@ class PctPettyCash(models.Model):
         for record in self:
             # Sum allocations from previous years (only posted)
             prev_allocations = record.allocation_line_ids.filtered(
-                lambda l: l.payment_date
-                and l.payment_date.year < current_year
+                lambda l: l.request_date
+                and l.request_date.year < current_year
                 and l.state == 'posted'
             )
             total_prev_allocated = sum(prev_allocations.mapped('amount'))
@@ -151,7 +164,7 @@ class PctPettyCash(models.Model):
         'amount_brought_forward',
         'allocation_line_ids.amount',
         'allocation_line_ids.state',
-        'allocation_line_ids.payment_date',
+        'allocation_line_ids.request_date',
         'expense_line_ids.amount',
         'expense_line_ids.state',
         'expense_line_ids.expense_date',
@@ -161,8 +174,8 @@ class PctPettyCash(models.Model):
         for record in self:
             # Sum allocations for current year (only posted)
             allocations = record.allocation_line_ids.filtered(
-                lambda l: l.payment_date
-                and l.payment_date.year == current_year
+                lambda l: l.request_date
+                and l.request_date.year == current_year
                 and l.state == 'posted'
             )
             record.amount_allocated = sum(allocations.mapped('amount'))
@@ -204,15 +217,15 @@ class PctPettyCash(models.Model):
         """Helper to get domain for current year records"""
         current_year = date.today().year
         return [
-            ('payment_date', '>=', date(current_year, 1, 1)),
-            ('payment_date', '<=', date(current_year, 12, 31)),
+            ('request_date', '>=', date(current_year, 1, 1)),
+            ('request_date', '<=', date(current_year, 12, 31)),
         ]
 
 
 class PctPettyCashAllocation(models.Model):
     _name = 'pct.petty.cash.allocation'
     _description = 'Petty Cash Allocation Line'
-    _order = 'payment_date desc, id desc'
+    _order = 'request_date desc, id desc'
     _inherit = 'analytic.mixin'
 
     petty_cash_id = fields.Many2one(
@@ -229,10 +242,16 @@ class PctPettyCashAllocation(models.Model):
         related='petty_cash_id.currency_id',
         store=True,
     )
-    payment_date = fields.Date(
-        string='Payment Date',
+    request_date = fields.Date(
+        string='Request Date',
         required=True,
         default=fields.Date.context_today,
+        readonly=True,
+        help='Date the allocation request was created',
+    )
+    payment_date = fields.Date(
+        string='Payment Date',
+        help='Date the payment was made',
     )
     amount = fields.Monetary(
         string='Amount Allocated',
@@ -242,9 +261,8 @@ class PctPettyCashAllocation(models.Model):
     source_journal_id = fields.Many2one(
         'account.journal',
         string='Source Journal',
-        required=True,
         domain="[('type', 'in', ['bank', 'cash']), ('company_id', '=', company_id)]",
-        help='Company bank/cash journal from which payment is made',
+        help='Company bank/cash journal from which payment is made (required before posting)',
     )
     source_account_id = fields.Many2one(
         'account.account',
@@ -304,7 +322,7 @@ class PctPettyCashAllocation(models.Model):
         move_vals = {
             'move_type': 'entry',
             'journal_id': petty_cash.journal_id.id,
-            'date': self.payment_date,
+            'date': self.request_date,
             'ref': _('Petty Cash Allocation: %s') % petty_cash.name,
             'line_ids': [
                 Command.create({
@@ -332,6 +350,10 @@ class PctPettyCashAllocation(models.Model):
     def action_post(self):
         """Post the journal entry"""
         for line in self:
+            if not line.analytic_distribution:
+                raise UserError(_('Analytic distribution is required before posting allocation lines.'))
+            if not line.source_journal_id:
+                raise UserError(_('Source journal is required before posting allocation lines.'))
             if not line.move_id:
                 line.action_create_move()
             if line.move_id.state == 'draft':
@@ -352,12 +374,32 @@ class PctPettyCashAllocation(models.Model):
             'target': 'current',
         }
 
+    def unlink(self):
+        """Prevent deletion of posted allocation lines and delete associated draft journal entries"""
+        for line in self:
+            if line.state == 'posted':
+                raise UserError(_(
+                    'Cannot delete a posted allocation line. '
+                    'Please reset the journal entry to draft first.'
+                ))
+        # Collect draft journal entries to delete
+        moves_to_delete = self.filtered(lambda l: l.move_id and l.move_id.state == 'draft').mapped('move_id')
+        result = super().unlink()
+        # Delete the associated draft journal entries
+        if moves_to_delete:
+            moves_to_delete.unlink()
+        return result
+
 
 class PctPettyCashExpense(models.Model):
     _name = 'pct.petty.cash.expense'
     _description = 'Petty Cash Expense Line'
     _order = 'expense_date desc, id desc'
     _inherit = 'analytic.mixin'
+
+    # Analytic plan IDs for project and project stage validation
+    PROJECT_PLAN_ID = 1
+    PROJECT_STAGE_PLAN_ID = 2
 
     petty_cash_id = fields.Many2one(
         'pct.petty.cash',
@@ -492,11 +534,49 @@ class PctPettyCashExpense(models.Model):
         self.move_id = move.id
         return True
 
+    def _validate_analytic_distribution_for_posting(self):
+        """Validate analytic distribution has project and project stage before posting"""
+        self.ensure_one()
+        if not self.analytic_distribution:
+            raise UserError(_('Analytic distribution is required before posting expense lines.'))
+
+        # Get analytic accounts from distribution
+        # Keys can be single IDs or comma-separated IDs (e.g., '242' or '242,410')
+        analytic_account_ids = set()
+        for key in self.analytic_distribution.keys():
+            for aid in str(key).split(','):
+                analytic_account_ids.add(int(aid.strip()))
+
+        if not analytic_account_ids:
+            raise UserError(_('Analytic distribution is required before posting expense lines.'))
+
+        # Check for project and project stage analytic accounts
+        analytic_accounts = self.env['account.analytic.account'].browse(list(analytic_account_ids))
+
+        has_project = False
+        has_project_stage = False
+
+        for account in analytic_accounts:
+            if account.plan_id.id == self.PROJECT_PLAN_ID:
+                has_project = True
+            if account.plan_id.id == self.PROJECT_STAGE_PLAN_ID:
+                has_project_stage = True
+
+        if not has_project:
+            raise UserError(_('Please select a Project in the analytic distribution before posting.'))
+        if not has_project_stage:
+            raise UserError(_('Please select a Project Stage in the analytic distribution before posting.'))
+
     def action_post(self):
         """Post the journal entry"""
         for line in self:
             if line.petty_cash_id.state != 'running':
                 raise UserError(_('Cannot post expense. The petty cash "%s" must be in Running state.') % line.petty_cash_id.name)
+            # Validate expense account is set
+            if not line.account_id:
+                raise UserError(_('Expense account is required before posting expense lines.'))
+            # Validate analytic distribution with project and project stage
+            line._validate_analytic_distribution_for_posting()
             if not line.move_id:
                 line.action_create_move()
             if line.move_id.state == 'draft':
@@ -528,3 +608,19 @@ class PctPettyCashExpense(models.Model):
             'view_mode': 'form',
             'target': 'current',
         }
+
+    def unlink(self):
+        """Prevent deletion of posted expense lines and delete associated draft journal entries"""
+        for line in self:
+            if line.state == 'posted':
+                raise UserError(_(
+                    'Cannot delete a posted expense line. '
+                    'Please reset the journal entry to draft first.'
+                ))
+        # Collect draft journal entries to delete
+        moves_to_delete = self.filtered(lambda l: l.move_id and l.move_id.state == 'draft').mapped('move_id')
+        result = super().unlink()
+        # Delete the associated draft journal entries
+        if moves_to_delete:
+            moves_to_delete.unlink()
+        return result

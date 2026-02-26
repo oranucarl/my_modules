@@ -30,10 +30,12 @@ Features:
     'depends': [
         'account',
         'analytic',
+        'mail',
     ],
     'data': [
         'security/pct_petty_cash_security.xml',
         'security/ir.model.access.csv',
+        'data/mail_template_data.xml',
         'wizards/allocation_wizard_views.xml',
         'wizards/expense_wizard_views.xml',
         'wizards/cash_report_wizard_views.xml',

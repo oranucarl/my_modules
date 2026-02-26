@@ -18,3 +18,8 @@ class ResConfigSettings(models.TransientModel):
         config_parameter='pct_petty_cash.require_analytic',
         help="If enabled, analytic distribution will be required on expense lines.",
     )
+    petty_cash_notification_email = fields.Char(
+        string='Accounting Team Email',
+        config_parameter='pct_petty_cash.notification_email',
+        help="Email address to receive notifications when allocations or expenses are created.",
+    )
