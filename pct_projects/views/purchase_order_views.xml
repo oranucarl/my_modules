@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Inherit Purchase Order Form to Include Project -->
+    <!-- <record id="view_purchase_order_form_project" model="ir.ui.view">
+        <field name="name">purchase.order.form.project</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="project_id" domain="[('account_id', '!=', False)]"/>
+            </xpath>
+        </field>
+    </record> -->
+
+    <!-- Inherit Search View to Include Project Filter and Grouping -->
+    <record id="view_purchase_order_search_inherit_project" model="ir.ui.view">
+        <field name="name">purchase.report.search.inherit.project</field>
+        <field name="model">purchase.report</field>
+        <field name="inherit_id" ref="purchase.view_purchase_order_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="project_id"/>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <filter name="group_by_project" string="Project" context="{'group_by': 'project_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
