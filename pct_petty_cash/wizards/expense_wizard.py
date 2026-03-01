@@ -34,6 +34,12 @@ class PctPettyCashExpenseWizard(models.TransientModel):
         string='Description',
         required=True,
     )
+    product_id = fields.Many2one(
+        'product.product',
+        string='Expense Category',
+        domain="[('type', '=', 'service')]",
+        help='Product/service representing the expense category',
+    )
     amount = fields.Monetary(
         string='Amount Spent',
         currency_field='currency_id',
@@ -170,6 +176,7 @@ class PctPettyCashExpenseWizard(models.TransientModel):
             'petty_cash_id': self.petty_cash_id.id,
             'expense_date': self.expense_date,
             'description': self.description,
+            'product_id': self.product_id.id if self.product_id else False,
             'amount': self.amount,
             'analytic_distribution': self.analytic_distribution,
             'attachment_ids': [(6, 0, self.attachment_ids.ids)] if self.attachment_ids else False,

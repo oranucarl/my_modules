@@ -11,3 +11,4 @@ access_pct_petty_cash_expense_manager,pct.petty.cash.expense.manager,model_pct_p
 access_pct_petty_cash_allocation_wizard_user,pct.petty.cash.allocation.wizard.user,model_pct_petty_cash_allocation_wizard,group_petty_cash_user,1,1,1,1
 access_pct_petty_cash_expense_wizard_user,pct.petty.cash.expense.wizard.user,model_pct_petty_cash_expense_wizard,group_petty_cash_user,1,1,1,1
 access_pct_cash_report_wizard_user,pct.cash.report.wizard.user,model_pct_cash_report_wizard,group_petty_cash_user,1,1,1,1
+access_pct_reassign_custodian_wizard_accountant,pct.reassign.custodian.wizard.accountant,model_pct_reassign_custodian_wizard,group_petty_cash_accountant,1,1,1,1

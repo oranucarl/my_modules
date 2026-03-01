@@ -22,6 +22,11 @@ class PctCashReportWizard(models.TransientModel):
         string='Custodian',
         help='Filter by custodian. Leave empty to show all.',
     )
+    petty_cash_id = fields.Many2one(
+        'pct.petty.cash',
+        string='Petty Cash',
+        help='Filter by petty cash record. Leave empty to show all.',
+    )
     date_from = fields.Date(
         string='Date From',
         help='Start date of the report period. Leave empty for no start date filter.',
@@ -73,35 +78,66 @@ class PctCashReportWizard(models.TransientModel):
         compute='_compute_summary',
     )
 
+    def _get_user_petty_cash_ids(self):
+        """Get petty cash records where current user is custodian (for regular users)"""
+        if self.env.user.has_group('pct_petty_cash.group_petty_cash_accountant'):
+            return False  # No restriction for accountants/managers
+        petty_cash_records = self.env['pct.petty.cash'].search([
+            ('custodian_id', '=', self.env.user.id)
+        ])
+        return petty_cash_records.ids
+
     def _get_allocation_domain(self):
         """Build domain for allocations based on filters"""
         domain = []
+
+        # For regular users, restrict to petty cash records where they are current custodian
+        user_petty_cash_ids = self._get_user_petty_cash_ids()
+        if user_petty_cash_ids is not False:
+            domain.append(('petty_cash_id', 'in', user_petty_cash_ids))
+
+        # Apply petty cash filter (independent of custodian)
+        if self.petty_cash_id:
+            domain.append(('petty_cash_id', '=', self.petty_cash_id.id))
+
+        # Apply custodian filter (additional filter, works within petty cash)
         if self.custodian_id:
             domain.append(('petty_cash_id.custodian_id', '=', self.custodian_id.id))
+
+        # Apply date filters
         if self.date_from:
             domain.append(('request_date', '>=', self.date_from))
         if self.date_to:
             domain.append(('request_date', '<=', self.date_to))
-        # Apply user access restriction for regular users
-        if not self.env.user.has_group('pct_petty_cash.group_petty_cash_accountant'):
-            domain.append(('petty_cash_id.custodian_id', '=', self.env.user.id))
+
         return domain
 
     def _get_expense_domain(self):
         """Build domain for expenses based on filters"""
         domain = []
+
+        # For regular users, restrict to petty cash records where they are current custodian
+        user_petty_cash_ids = self._get_user_petty_cash_ids()
+        if user_petty_cash_ids is not False:
+            domain.append(('petty_cash_id', 'in', user_petty_cash_ids))
+
+        # Apply petty cash filter (independent of custodian)
+        if self.petty_cash_id:
+            domain.append(('petty_cash_id', '=', self.petty_cash_id.id))
+
+        # Apply custodian filter (additional filter, works within petty cash)
         if self.custodian_id:
             domain.append(('petty_cash_id.custodian_id', '=', self.custodian_id.id))
+
+        # Apply date filters
         if self.date_from:
             domain.append(('expense_date', '>=', self.date_from))
         if self.date_to:
             domain.append(('expense_date', '<=', self.date_to))
-        # Apply user access restriction for regular users
-        if not self.env.user.has_group('pct_petty_cash.group_petty_cash_accountant'):
-            domain.append(('petty_cash_id.custodian_id', '=', self.env.user.id))
+
         return domain
 
-    @api.depends('allocation_line_ids', 'expense_line_ids', 'custodian_id', 'date_from', 'date_to')
+    @api.depends('allocation_line_ids', 'expense_line_ids', 'custodian_id', 'petty_cash_id', 'date_from', 'date_to')
     def _compute_summary(self):
         """Compute summary totals"""
         for wizard in self:
@@ -111,19 +147,23 @@ class PctCashReportWizard(models.TransientModel):
 
             # Calculate amount brought forward (from petty cash records)
             amount_brought_forward = 0.0
-            if wizard.custodian_id:
-                # Get petty cash records for this custodian
-                petty_cash_records = self.env['pct.petty.cash'].search([
-                    ('custodian_id', '=', wizard.custodian_id.id)
-                ])
-                amount_brought_forward = sum(petty_cash_records.mapped('amount_brought_forward'))
-            else:
-                # Get all petty cash records (respecting user access)
-                domain = []
-                if not self.env.user.has_group('pct_petty_cash.group_petty_cash_accountant'):
-                    domain.append(('custodian_id', '=', self.env.user.id))
-                petty_cash_records = self.env['pct.petty.cash'].search(domain)
-                amount_brought_forward = sum(petty_cash_records.mapped('amount_brought_forward'))
+
+            # Build domain for petty cash records based on filters and user access
+            pc_domain = []
+
+            # For regular users, restrict to petty cash records where they are current custodian
+            if not self.env.user.has_group('pct_petty_cash.group_petty_cash_accountant'):
+                pc_domain.append(('custodian_id', '=', self.env.user.id))
+
+            if wizard.petty_cash_id:
+                # Specific petty cash record selected
+                pc_domain.append(('id', '=', wizard.petty_cash_id.id))
+            elif wizard.custodian_id:
+                # Filter by custodian (for accountants who can see all)
+                pc_domain.append(('custodian_id', '=', wizard.custodian_id.id))
+
+            petty_cash_records = self.env['pct.petty.cash'].search(pc_domain)
+            amount_brought_forward = sum(petty_cash_records.mapped('amount_brought_forward'))
 
             wizard.amount_brought_forward = amount_brought_forward
             wizard.balance = amount_brought_forward + wizard.total_allocated - wizard.total_expensed
@@ -133,18 +173,34 @@ class PctCashReportWizard(models.TransientModel):
         """Set default values and load initial data"""
         res = super().default_get(fields_list)
 
-        # If user is only a petty cash user (not accountant/manager), default to themselves
-        if not self.env.user.has_group('pct_petty_cash.group_petty_cash_accountant'):
+        is_accountant = self.env.user.has_group('pct_petty_cash.group_petty_cash_accountant')
+
+        # For regular users, find their petty cash records
+        if not is_accountant:
+            user_petty_cash = self.env['pct.petty.cash'].search([
+                ('custodian_id', '=', self.env.user.id)
+            ])
+
+            # Set custodian to current user
             res['custodian_id'] = self.env.user.id
+
+            # If user has only one petty cash record, default to it
+            if len(user_petty_cash) == 1:
+                res['petty_cash_id'] = user_petty_cash.id
+
+            # Get petty cash IDs for filtering
+            user_petty_cash_ids = user_petty_cash.ids
+        else:
+            user_petty_cash_ids = None  # No restriction
 
         # Load initial data
         allocation_domain = []
         expense_domain = []
 
         # Apply user access restriction for regular users
-        if not self.env.user.has_group('pct_petty_cash.group_petty_cash_accountant'):
-            allocation_domain.append(('petty_cash_id.custodian_id', '=', self.env.user.id))
-            expense_domain.append(('petty_cash_id.custodian_id', '=', self.env.user.id))
+        if user_petty_cash_ids is not None:
+            allocation_domain.append(('petty_cash_id', 'in', user_petty_cash_ids))
+            expense_domain.append(('petty_cash_id', 'in', user_petty_cash_ids))
 
         allocations = self.env['pct.petty.cash.allocation'].search(allocation_domain)
         expenses = self.env['pct.petty.cash.expense'].search(expense_domain)
@@ -154,7 +210,7 @@ class PctCashReportWizard(models.TransientModel):
 
         return res
 
-    @api.onchange('custodian_id', 'date_from', 'date_to')
+    @api.onchange('custodian_id', 'petty_cash_id', 'date_from', 'date_to')
     def _onchange_filters(self):
         """Update lines when filters change"""
         allocation_domain = self._get_allocation_domain()
@@ -213,7 +269,9 @@ class PctCashReportWizard(models.TransientModel):
 
         # Report title info
         title = 'Petty Cash Report'
-        if self.custodian_id:
+        if self.petty_cash_id:
+            title += f' - {self.petty_cash_id.name}'
+        elif self.custodian_id:
             title += f' - {self.custodian_id.name}'
         if self.date_from and self.date_to:
             title += f' ({self.date_from.strftime("%Y-%m-%d")} to {self.date_to.strftime("%Y-%m-%d")})'
@@ -323,7 +381,9 @@ class PctCashReportWizard(models.TransientModel):
 
         # Create attachment
         filename = f'petty_cash_report'
-        if self.custodian_id:
+        if self.petty_cash_id:
+            filename += f'_{self.petty_cash_id.name.replace(" ", "_")}'
+        elif self.custodian_id:
             filename += f'_{self.custodian_id.name.replace(" ", "_")}'
         if self.date_from:
             filename += f'_from_{self.date_from.strftime("%Y%m%d")}'
@@ -364,9 +424,17 @@ class PctCashReportWizard(models.TransientModel):
         elif self.date_to:
             period_str = f'To {self.date_to.strftime("%Y-%m-%d")}'
 
+        # Build custodian/petty cash name for report
+        if self.petty_cash_id:
+            report_name = self.petty_cash_id.name
+        elif self.custodian_id:
+            report_name = self.custodian_id.name
+        else:
+            report_name = 'All Custodians'
+
         data = {
             'wizard_id': self.id,
-            'custodian_name': self.custodian_id.name if self.custodian_id else 'All Custodians',
+            'custodian_name': report_name,
             'period': period_str,
             'allocation_ids': allocations.ids,
             'expense_ids': expenses.ids,

@@ -16,6 +16,12 @@
                                options="{'no_create': True}"
                                readonly="1"
                                groups="!pct_petty_cash.group_petty_cash_accountant"/>
+                        <field name="petty_cash_id"
+                               options="{'no_create': True}"
+                               groups="pct_petty_cash.group_petty_cash_accountant"/>
+                        <field name="petty_cash_id"
+                               options="{'no_create': True}"
+                               groups="!pct_petty_cash.group_petty_cash_accountant"/>
                     </group>
                     <group>
                         <field name="date_from"/>

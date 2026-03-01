@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Reassign Custodian Wizard Form View -->
+    <record id="pct_reassign_custodian_wizard_view_form" model="ir.ui.view">
+        <field name="name">pct.reassign.custodian.wizard.form</field>
+        <field name="model">pct.reassign.custodian.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reassign Custodian">
+                <group>
+                    <field name="petty_cash_id" readonly="1"/>
+                    <field name="current_custodian_id" readonly="1"/>
+                    <field name="new_custodian_id" options="{'no_create': True}"/>
+                </group>
+                <footer>
+                    <button name="action_reassign_custodian" type="object"
+                            string="Reassign" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Server Action for Reassign Custodian -->
+    <record id="action_reassign_custodian" model="ir.actions.act_window">
+        <field name="name">Reassign Custodian</field>
+        <field name="res_model">pct.reassign.custodian.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_pct_petty_cash"/>
+        <field name="binding_view_types">form</field>
+        <field name="groups_id" eval="[(4, ref('pct_petty_cash.group_petty_cash_accountant'))]"/>
+    </record>
+
+</odoo>

@@ -39,6 +39,7 @@ Features:
         'wizards/allocation_wizard_views.xml',
         'wizards/expense_wizard_views.xml',
         'wizards/cash_report_wizard_views.xml',
+        'wizards/reassign_custodian_wizard_views.xml',
         'views/pct_petty_cash_views.xml',
         'views/res_config_settings_views.xml',
         'views/pct_petty_cash_menus.xml',
