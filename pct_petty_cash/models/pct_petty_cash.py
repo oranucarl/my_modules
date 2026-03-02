@@ -228,6 +228,10 @@ class PctPettyCashAllocation(models.Model):
     _order = 'request_date desc, id desc'
     _inherit = 'analytic.mixin'
 
+    # Analytic plan IDs for project and project stage validation
+    PROJECT_PLAN_ID = 1
+    PROJECT_STAGE_PLAN_ID = 2
+
     petty_cash_id = fields.Many2one(
         'pct.petty.cash',
         string='Petty Cash',
@@ -347,13 +351,46 @@ class PctPettyCashAllocation(models.Model):
         self.move_id = move.id
         return True
 
+    def _validate_analytic_distribution_for_posting(self):
+        """Validate analytic distribution has project and project stage before posting"""
+        self.ensure_one()
+        if not self.analytic_distribution:
+            raise UserError(_('Analytic distribution is required before posting allocation lines.'))
+
+        # Get analytic accounts from distribution
+        # Keys can be single IDs or comma-separated IDs (e.g., '242' or '242,410')
+        analytic_account_ids = set()
+        for key in self.analytic_distribution.keys():
+            for aid in str(key).split(','):
+                analytic_account_ids.add(int(aid.strip()))
+
+        if not analytic_account_ids:
+            raise UserError(_('Analytic distribution is required before posting allocation lines.'))
+
+        # Check for project and project stage analytic accounts
+        analytic_accounts = self.env['account.analytic.account'].browse(list(analytic_account_ids))
+
+        has_project = False
+        has_project_stage = False
+
+        for account in analytic_accounts:
+            if account.plan_id.id == self.PROJECT_PLAN_ID:
+                has_project = True
+            if account.plan_id.id == self.PROJECT_STAGE_PLAN_ID:
+                has_project_stage = True
+
+        if not has_project:
+            raise UserError(_('Please select a Project in the analytic distribution before posting.'))
+        if not has_project_stage:
+            raise UserError(_('Please select a Project Stage in the analytic distribution before posting.'))
+
     def action_post(self):
         """Post the journal entry"""
         for line in self:
-            if not line.analytic_distribution:
-                raise UserError(_('Analytic distribution is required before posting allocation lines.'))
             if not line.source_journal_id:
                 raise UserError(_('Source journal is required before posting allocation lines.'))
+            # Validate analytic distribution with project and project stage
+            line._validate_analytic_distribution_for_posting()
             if not line.move_id:
                 line.action_create_move()
             if line.move_id.state == 'draft':
@@ -389,6 +426,21 @@ class PctPettyCashAllocation(models.Model):
         if moves_to_delete:
             moves_to_delete.unlink()
         return result
+
+    def write(self, vals):
+        """Track amount changes on parent petty cash record"""
+        if 'amount' in vals:
+            for line in self:
+                old_amount = line.amount
+                new_amount = vals.get('amount')
+                if old_amount != new_amount and line.petty_cash_id:
+                    line.petty_cash_id.message_post(
+                        body=_('Allocation Line (%(date)s): Amount Allocated changed from %(old)s to %(new)s',
+                               date=line.request_date,
+                               old=old_amount,
+                               new=new_amount),
+                    )
+        return super().write(vals)
 
 
 class PctPettyCashExpense(models.Model):
@@ -624,3 +676,31 @@ class PctPettyCashExpense(models.Model):
         if moves_to_delete:
             moves_to_delete.unlink()
         return result
+
+    def write(self, vals):
+        """Track amount and expense category changes on parent petty cash record"""
+        for line in self:
+            if not line.petty_cash_id:
+                continue
+            messages = []
+            if 'amount' in vals:
+                old_amount = line.amount
+                new_amount = vals.get('amount')
+                if old_amount != new_amount:
+                    messages.append(_('Amount Spent changed from %(old)s to %(new)s',
+                                      old=old_amount, new=new_amount))
+            if 'product_id' in vals:
+                old_category = line.product_id.name if line.product_id else _('None')
+                new_product = self.env['product.product'].browse(vals.get('product_id'))
+                new_category = new_product.name if new_product else _('None')
+                if line.product_id.id != vals.get('product_id'):
+                    messages.append(_('Expense Category changed from %(old)s to %(new)s',
+                                      old=old_category, new=new_category))
+            if messages:
+                line.petty_cash_id.message_post(
+                    body=_('Expense Line (%(date)s - %(desc)s): %(changes)s',
+                           date=line.expense_date,
+                           desc=line.description,
+                           changes=', '.join(messages)),
+                )
+        return super().write(vals)

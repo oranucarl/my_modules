@@ -23,10 +23,7 @@
                             <field name="petty_cash_id" readonly="1"/>
                             <field name="expense_date" readonly="state == 'posted'"/>
                             <field name="product_id" options="{'no_create': True}"
-                                   readonly="state == 'posted'"
-                                   groups="pct_petty_cash.group_petty_cash_accountant"/>
-                            <field name="product_id" readonly="1"
-                                   groups="!pct_petty_cash.group_petty_cash_accountant"/>
+                                   readonly="state == 'posted'"/>
                             <field name="description" readonly="state == 'posted'"/>
                         </group>
                         <group string="Amounts">
@@ -143,21 +140,23 @@
                                             invisible="not move_id"/>
                                 </list>
                             </field>
-                            <field name="allocation_line_ids" readonly="1"
+                            <field name="allocation_line_ids"
+                                   readonly="state == 'closed'"
                                    groups="!pct_petty_cash.group_petty_cash_accountant">
-                                <list string="Allocations" >
-                                    <field name="request_date"/>
-                                    <field name="amount" sum="Total Allocated"/>
+                                <list string="Allocations" editable="bottom">
+                                    <field name="request_date" readonly="1"/>
+                                    <field name="amount" sum="Total Allocated" readonly="state == 'posted'"/>
                                     <field name="source_journal_id" readonly="1"/>
-                                    <field name="source_account_id"/>
+                                    <field name="source_account_id" readonly="1"/>
                                     <field name="analytic_distribution" widget="analytic_distribution"
                                            groups="analytic.group_analytic_accounting"
-                                           optional="show"/>
-                                    <field name="move_id" optional="show"/>
+                                           optional="show" readonly="state == 'posted'"/>
+                                    <field name="move_id" readonly="1" optional="show"/>
                                     <field name="state" widget="badge"
                                            decoration-success="state == 'posted'"
                                            decoration-info="state == 'draft'"/>
                                     <field name="currency_id" column_invisible="1"/>
+                                    <field name="company_id" column_invisible="1"/>
                                 </list>
                             </field>
                         </page>
@@ -191,22 +190,24 @@
                                             invisible="not move_id"/>
                                 </list>
                             </field>
-                            <field name="expense_line_ids" readonly="1"
+                            <field name="expense_line_ids"
+                                   readonly="state == 'closed'"
                                    groups="!pct_petty_cash.group_petty_cash_accountant">
-                                <list string="Expenses">
-                                    <field name="expense_date"/>
-                                    <field name="product_id"/>
-                                    <field name="description"/>
-                                    <field name="amount" sum="Total Expensed"/>
-                                    <field name="account_id"/>
+                                <list string="Expenses" editable="bottom">
+                                    <field name="expense_date" readonly="state == 'posted'"/>
+                                    <field name="product_id" options="{'no_create': True}" readonly="state == 'posted'"/>
+                                    <field name="description" readonly="state == 'posted'"/>
+                                    <field name="amount" sum="Total Expensed" readonly="state == 'posted'"/>
+                                    <field name="account_id" readonly="1"/>
                                     <field name="analytic_distribution" widget="analytic_distribution"
                                            groups="analytic.group_analytic_accounting"
-                                           optional="show"/>
-                                    <field name="move_id" optional="show"/>
+                                           optional="show" readonly="state == 'posted'"/>
+                                    <field name="move_id" readonly="1" optional="show"/>
                                     <field name="state" widget="badge"
                                            decoration-success="state == 'posted'"
                                            decoration-info="state == 'draft'"/>
                                     <field name="currency_id" column_invisible="1"/>
+                                    <field name="company_id" column_invisible="1"/>
                                     <button name="action_open_form" type="object" string="Open"
                                             class="btn-link" icon="fa-external-link"/>
                                 </list>
@@ -271,11 +272,11 @@
 
     <!-- Petty Cash Action -->
     <record id="action_pct_petty_cash" model="ir.actions.act_window">
-        <field name="name">Petty Cash</field>
+        <field name="name">All Petty Cash</field>
         <field name="res_model">pct.petty.cash</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="pct_petty_cash_view_search"/>
-        <field name="context">{'search_default_running': 1}</field>
+        <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first petty cash record

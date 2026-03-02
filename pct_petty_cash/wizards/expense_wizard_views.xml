@@ -12,12 +12,12 @@
                         <field name="petty_cash_id" readonly="1" force_save="1"/>
                         <field name="expense_date"/>
                         <field name="description"/>
-                        <field name="product_id" options="{'no_create': True}"/>
                     </group>
                     <group>
                         <field name="company_id" invisible="1"/>
                         <field name="currency_id" invisible="1"/>
                         <field name="amount"/>
+                        <field name="product_id" options="{'no_create': True}"/>
                         <field name="analytic_distribution" widget="analytic_distribution"
                                required="1"
                                groups="analytic.group_analytic_accounting"/>

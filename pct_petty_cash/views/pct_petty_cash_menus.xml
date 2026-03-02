@@ -8,21 +8,21 @@
               sequence="45"
               groups="group_petty_cash_user"/>
 
+    <!-- All Petty Cash Menu (for accountants and managers - appears first for them) -->
+    <menuitem id="menu_all_petty_cash"
+              name="All Petty Cash"
+              parent="menu_petty_cash_root"
+              action="action_pct_petty_cash"
+              sequence="10"
+              groups="group_petty_cash_accountant"/>
+
     <!-- My Petty Cash Menu (for all users) -->
     <menuitem id="menu_my_petty_cash"
               name="My Petty Cash"
               parent="menu_petty_cash_root"
               action="action_my_petty_cash"
-              sequence="10"
-              groups="group_petty_cash_user"/>
-
-    <!-- All Petty Cash Menu (for accountants and managers) -->
-    <menuitem id="menu_all_petty_cash"
-              name="All Petty Cash"
-              parent="menu_petty_cash_root"
-              action="action_pct_petty_cash"
               sequence="20"
-              groups="group_petty_cash_accountant"/>
+              groups="group_petty_cash_user"/>
 
     <!-- Configuration Menu -->
     <menuitem id="menu_petty_cash_config"

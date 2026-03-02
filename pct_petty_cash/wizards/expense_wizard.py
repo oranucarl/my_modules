@@ -138,27 +138,6 @@ class PctPettyCashExpenseWizard(models.TransientModel):
         if not has_project_stage:
             raise UserError(_('Please select a Project Stage in the analytic distribution.'))
 
-    def _send_expense_notification(self, expense):
-        """Send email notification to accounting team for new expense"""
-        notification_email = self.env['ir.config_parameter'].sudo().get_param(
-            'pct_petty_cash.notification_email'
-        )
-        if not notification_email:
-            return
-
-        template = self.env.ref('pct_petty_cash.mail_template_expense_notification', raise_if_not_found=False)
-        if template:
-            # Generate email values from template
-            email_values = {
-                'email_to': notification_email,
-                'email_from': self.env.company.email or self.env.user.email_formatted,
-            }
-            template.send_mail(
-                expense.id,
-                force_send=True,
-                email_values=email_values,
-            )
-
     def action_create_expense(self):
         """Create expense line from wizard"""
         self.ensure_one()
@@ -182,9 +161,6 @@ class PctPettyCashExpenseWizard(models.TransientModel):
             'attachment_ids': [(6, 0, self.attachment_ids.ids)] if self.attachment_ids else False,
         }
         expense = self.env['pct.petty.cash.expense'].create(expense_vals)
-
-        # Send notification email to accounting team
-        self._send_expense_notification(expense)
 
         return {
             'type': 'ir.actions.act_window',
