@@ -9,6 +9,10 @@ class PctPettyCashAllocationWizard(models.TransientModel):
     _description = 'Petty Cash Allocation Request Wizard'
     _inherit = ['analytic.mixin']
 
+    # Analytic plan IDs for project and project stage
+    PROJECT_PLAN_ID = 1
+    PROJECT_STAGE_PLAN_ID = 2
+
     petty_cash_id = fields.Many2one(
         'pct.petty.cash',
         string='Petty Cash',
@@ -51,6 +55,39 @@ class PctPettyCashAllocationWizard(models.TransientModel):
             if not wizard.analytic_distribution:
                 raise ValidationError(_('Analytic distribution is required for allocation requests.'))
 
+    def _validate_analytic_distribution(self):
+        """Validate analytic distribution has project and project stage"""
+        self.ensure_one()
+        if not self.analytic_distribution:
+            raise UserError(_('Analytic distribution is required for allocation requests.'))
+
+        # Get analytic accounts from distribution
+        # Keys can be single IDs or comma-separated IDs (e.g., '242' or '242,410')
+        analytic_account_ids = set()
+        for key in self.analytic_distribution.keys():
+            for aid in str(key).split(','):
+                analytic_account_ids.add(int(aid.strip()))
+
+        if not analytic_account_ids:
+            raise UserError(_('Analytic distribution is required for allocation requests.'))
+
+        # Check for project and project stage analytic accounts
+        analytic_accounts = self.env['account.analytic.account'].browse(list(analytic_account_ids))
+
+        has_project = False
+        has_project_stage = False
+
+        for account in analytic_accounts:
+            if account.plan_id.id == self.PROJECT_PLAN_ID:
+                has_project = True
+            if account.plan_id.id == self.PROJECT_STAGE_PLAN_ID:
+                has_project_stage = True
+
+        if not has_project:
+            raise UserError(_('Please select a Project in the analytic distribution.'))
+        if not has_project_stage:
+            raise UserError(_('Please select a Project Stage in the analytic distribution.'))
+
     def _send_allocation_notification(self, allocation):
         """Send email notification to accounting team for new allocation"""
         notification_email = self.env['ir.config_parameter'].sudo().get_param(
@@ -81,6 +118,9 @@ class PctPettyCashAllocationWizard(models.TransientModel):
             raise UserError(_('Amount must be greater than zero.'))
         if not self.analytic_distribution:
             raise UserError(_('Analytic distribution is required for allocation requests.'))
+
+        # Validate project and project stage in analytic distribution
+        self._validate_analytic_distribution()
 
         allocation_vals = {
             'petty_cash_id': self.petty_cash_id.id,
