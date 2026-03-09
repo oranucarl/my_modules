@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="quality_check_view_list_inherit_production" model="ir.ui.view">
+        <field name="name">quality.check.list.inherit.production</field>
+        <field name="model">quality.check</field>
+        <field name="inherit_id" ref="quality_control.quality_check_view_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='operation_id']" position="after">
+                <field name="production_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
