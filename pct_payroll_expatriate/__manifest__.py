@@ -14,8 +14,10 @@
     """,
     'author': 'Carlson Oranu',
     'depends': [
-        'hr_payroll',
+        'base',
+        'hr',
         'hr_contract',
+        'hr_payroll',
     ],
     'data': [
         'security/security.xml',

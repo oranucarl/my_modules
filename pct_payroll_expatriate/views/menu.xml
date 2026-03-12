@@ -37,7 +37,7 @@
     </record>
 
     <!-- Update the existing all payslips menu (if exists) -->
-    <record id="hr_payroll.menu_hr_payslip_all_payslips" model="ir.ui.menu">
+    <record id="hr_payroll.menu_hr_payroll_employee_payslips" model="ir.ui.menu">
         <field name="action" ref="action_hr_payslip_non_expatriate"/>
     </record>
 

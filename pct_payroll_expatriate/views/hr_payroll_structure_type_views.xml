@@ -16,7 +16,7 @@
     <record id="hr_payroll_structure_type_view_list_inherit" model="ir.ui.view">
         <field name="name">hr.payroll.structure.type.list.inherit.expatriate</field>
         <field name="model">hr.payroll.structure.type</field>
-        <field name="inherit_id" ref="hr_payroll.hr_payroll_structure_type_view_list"/>
+        <field name="inherit_id" ref="hr_payroll.hr_payroll_structure_type_view_tree"/>
         <field name="arch" type="xml">
             <field name="country_id" position="after">
                 <field name="is_expatriate"/>
