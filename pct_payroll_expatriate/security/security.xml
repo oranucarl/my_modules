@@ -3,7 +3,7 @@
     <!-- Security Group for Expatriate Payroll Manager -->
     <record id="group_hr_payroll_expatriate" model="res.groups">
         <field name="name">Expatriate Payroll Manager</field>
-        <field name="category_id" ref="base.module_category_human_resources_payroll"/>
+        <field name="category_id" ref="base.module_category_usability"/>
         <field name="implied_ids" eval="[(4, ref('hr_payroll.group_hr_payroll_manager'))]"/>
         <field name="comment">Users with this access can view and manage expatriate payroll data including contracts, payslips, and batches.</field>
     </record>
