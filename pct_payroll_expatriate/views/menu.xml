@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================== -->
+    <!-- ADD DOMAIN TO EXISTING MENUS (Non-Expatriate Only) -->
+    <!-- ================================================== -->
+
+    <!-- Payroll/Payslips/Batches - Add domain for non-expatriate -->
+    <record id="hr_payroll.menu_hr_payslip_run" model="ir.ui.menu">
+        <field name="action" ref="hr_payroll.action_hr_payslip_run_tree"/>
+    </record>
+
+    <!-- Override the action to add domain filter -->
+    <record id="action_hr_payslip_run_non_expatriate" model="ir.actions.act_window">
+        <field name="name">Payslip Batches</field>
+        <field name="res_model">hr.payslip.run</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_expatriate', '!=', True)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new payslip batch
+            </p>
+        </field>
+    </record>
+
+    <!-- Update the existing menu to use the filtered action -->
+    <record id="hr_payroll.menu_hr_payslip_run" model="ir.ui.menu">
+        <field name="action" ref="action_hr_payslip_run_non_expatriate"/>
+    </record>
+
+    <!-- Payroll/Payslips/All Payslips - Create filtered action -->
+    <record id="action_hr_payslip_non_expatriate" model="ir.actions.act_window">
+        <field name="name">All Payslips</field>
+        <field name="res_model">hr.payslip</field>
+        <field name="view_mode">list,kanban,form,calendar,pivot,graph,activity</field>
+        <field name="domain">[('contract_id.structure_type_id.is_expatriate', '!=', True)]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Update the existing all payslips menu (if exists) -->
+    <record id="hr_payroll.menu_hr_payslip_all_payslips" model="ir.ui.menu">
+        <field name="action" ref="action_hr_payslip_non_expatriate"/>
+    </record>
+
+    <!-- Employees/Contracts - Create filtered action -->
+    <record id="action_hr_contract_non_expatriate" model="ir.actions.act_window">
+        <field name="name">Contracts</field>
+        <field name="res_model">hr.contract</field>
+        <field name="view_mode">list,kanban,form,calendar,pivot,graph,activity</field>
+        <field name="domain">[('structure_type_id.is_expatriate', '!=', True)]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Update Employees/Contracts menu -->
+    <record id="hr_contract.menu_hr_employee_contracts" model="ir.ui.menu">
+        <field name="action" ref="action_hr_contract_non_expatriate"/>
+    </record>
+
+    <!-- Payroll/Contracts - Create filtered action -->
+    <record id="action_hr_payroll_contract_non_expatriate" model="ir.actions.act_window">
+        <field name="name">Contracts</field>
+        <field name="res_model">hr.contract</field>
+        <field name="view_mode">list,kanban,form,calendar,pivot,graph,activity</field>
+        <field name="domain">[('structure_type_id.is_expatriate', '!=', True)]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Update Payroll/Contracts menu -->
+    <record id="hr_payroll.menu_hr_payroll_employees_root" model="ir.ui.menu">
+        <field name="action" ref="action_hr_payroll_contract_non_expatriate"/>
+    </record>
+
+    <!-- ================================================== -->
+    <!-- NEW EXPATRIATE MENUS                               -->
+    <!-- ================================================== -->
+
+    <!-- Expatriate Payslip Batches Action -->
+    <record id="action_hr_payslip_run_expatriate" model="ir.actions.act_window">
+        <field name="name">Expatriate Payslip Batches</field>
+        <field name="res_model">hr.payslip.run</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_expatriate', '=', True)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new expatriate payslip batch
+            </p>
+        </field>
+    </record>
+
+    <!-- Expatriate Payslip Batches Menu (under Payroll/Payslips/Batches) -->
+    <menuitem id="menu_hr_payslip_run_expatriate"
+        name="Expatriate Batches"
+        parent="hr_payroll.menu_hr_payslip_menu"
+        action="action_hr_payslip_run_expatriate"
+        sequence="11"
+        groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
+
+    <!-- Expatriate Payslips Action -->
+    <record id="action_hr_payslip_expatriate" model="ir.actions.act_window">
+        <field name="name">Expatriate Payslips</field>
+        <field name="res_model">hr.payslip</field>
+        <field name="view_mode">list,kanban,form,calendar,pivot,graph,activity</field>
+        <field name="domain">[('contract_id.structure_type_id.is_expatriate', '=', True)]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Expatriate Payslips Menu (under Payroll/Payslips) -->
+    <menuitem id="menu_hr_payslip_expatriate"
+        name="Expatriate Payslips"
+        parent="hr_payroll.menu_hr_payslip_menu"
+        action="action_hr_payslip_expatriate"
+        sequence="12"
+        groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
+
+    <!-- Expatriate Contracts Action (for Employees menu) -->
+    <record id="action_hr_contract_expatriate" model="ir.actions.act_window">
+        <field name="name">Expatriate Contracts</field>
+        <field name="res_model">hr.contract</field>
+        <field name="view_mode">list,kanban,form,calendar,pivot,graph,activity</field>
+        <field name="domain">[('structure_type_id.is_expatriate', '=', True)]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Expatriate Contracts Menu (under Employees/Contracts) -->
+    <menuitem id="menu_hr_contract_expatriate"
+        name="Expatriate Contracts"
+        parent="hr_contract.menu_human_resources_configuration_contract"
+        action="action_hr_contract_expatriate"
+        sequence="11"
+        groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
+
+    <!-- Expatriate Contracts Action (for Payroll menu) -->
+    <record id="action_hr_payroll_contract_expatriate" model="ir.actions.act_window">
+        <field name="name">Expatriate Contracts</field>
+        <field name="res_model">hr.contract</field>
+        <field name="view_mode">list,kanban,form,calendar,pivot,graph,activity</field>
+        <field name="domain">[('structure_type_id.is_expatriate', '=', True)]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Expatriate Contracts Menu (under Payroll/Contracts) -->
+    <menuitem id="menu_hr_payroll_contract_expatriate"
+        name="Expatriate Contracts"
+        parent="hr_payroll.menu_hr_payroll_configuration"
+        action="action_hr_payroll_contract_expatriate"
+        sequence="2"
+        groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
+
+</odoo>

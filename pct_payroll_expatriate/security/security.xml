@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Security Group for Expatriate Payroll Manager -->
+    <record id="group_hr_payroll_expatriate" model="res.groups">
+        <field name="name">Expatriate Payroll Manager</field>
+        <field name="category_id" ref="hr_payroll.module_category_payroll"/>
+        <field name="implied_ids" eval="[(4, ref('hr_payroll.group_hr_payroll_manager'))]"/>
+        <field name="comment">Users with this access can view and manage expatriate payroll data including contracts, payslips, and batches.</field>
+    </record>
+
+    <!-- ======================= -->
+    <!-- RECORD RULES            -->
+    <!-- ======================= -->
+
+    <!-- HR Contract - Non-Expatriate Rule (for regular payroll users) -->
+    <record id="hr_contract_non_expatriate_rule" model="ir.rule">
+        <field name="name">HR Contract: Non-Expatriate Only</field>
+        <field name="model_id" ref="hr_contract.model_hr_contract"/>
+        <field name="domain_force">[('structure_type_id.is_expatriate', '!=', True)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- HR Contract - Expatriate Rule (for expatriate payroll managers) -->
+    <record id="hr_contract_expatriate_rule" model="ir.rule">
+        <field name="name">HR Contract: Expatriate Access</field>
+        <field name="model_id" ref="hr_contract.model_hr_contract"/>
+        <field name="domain_force">[('structure_type_id.is_expatriate', '=', True)]</field>
+        <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- HR Contract History - Non-Expatriate Rule (for regular payroll users) -->
+    <record id="hr_contract_history_non_expatriate_rule" model="ir.rule">
+        <field name="name">HR Contract History: Non-Expatriate Only</field>
+        <field name="model_id" ref="hr_contract.model_hr_contract_history"/>
+        <field name="domain_force">[('contract_id.structure_type_id.is_expatriate', '!=', True)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- HR Contract History - Expatriate Rule (for expatriate payroll managers) -->
+    <record id="hr_contract_history_expatriate_rule" model="ir.rule">
+        <field name="name">HR Contract History: Expatriate Access</field>
+        <field name="model_id" ref="hr_contract.model_hr_contract_history"/>
+        <field name="domain_force">[('contract_id.structure_type_id.is_expatriate', '=', True)]</field>
+        <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- HR Payslip - Non-Expatriate Rule (for regular payroll users) -->
+    <record id="hr_payslip_non_expatriate_rule" model="ir.rule">
+        <field name="name">HR Payslip: Non-Expatriate Only</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
+        <field name="domain_force">[('contract_id.structure_type_id.is_expatriate', '!=', True)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- HR Payslip - Expatriate Rule (for expatriate payroll managers) -->
+    <record id="hr_payslip_expatriate_rule" model="ir.rule">
+        <field name="name">HR Payslip: Expatriate Access</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
+        <field name="domain_force">[('contract_id.structure_type_id.is_expatriate', '=', True)]</field>
+        <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- HR Payslip Run (Batch) - Non-Expatriate Rule (for regular payroll users) -->
+    <record id="hr_payslip_run_non_expatriate_rule" model="ir.rule">
+        <field name="name">HR Payslip Batch: Non-Expatriate Only</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip_run"/>
+        <field name="domain_force">[('is_expatriate', '!=', True)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- HR Payslip Run (Batch) - Expatriate Rule (for expatriate payroll managers) -->
+    <record id="hr_payslip_run_expatriate_rule" model="ir.rule">
+        <field name="name">HR Payslip Batch: Expatriate Access</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip_run"/>
+        <field name="domain_force">[('is_expatriate', '=', True)]</field>
+        <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+</odoo>
