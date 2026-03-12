@@ -51,7 +51,7 @@
     </record>
 
     <!-- Update Employees/Contracts menu -->
-    <record id="hr_contract.menu_hr_employee_contracts" model="ir.ui.menu">
+    <record id="hr_contract.hr_menu_contract" model="ir.ui.menu">
         <field name="action" ref="action_hr_contract_non_expatriate"/>
     </record>
 
@@ -89,7 +89,7 @@
     <!-- Expatriate Payslip Batches Menu (under Payroll/Payslips/Batches) -->
     <menuitem id="menu_hr_payslip_run_expatriate"
         name="Expatriate Batches"
-        parent="hr_payroll.menu_hr_payslip_menu"
+        parent="hr_payroll.menu_hr_payroll_payslips"
         action="action_hr_payslip_run_expatriate"
         sequence="11"
         groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
@@ -106,7 +106,7 @@
     <!-- Expatriate Payslips Menu (under Payroll/Payslips) -->
     <menuitem id="menu_hr_payslip_expatriate"
         name="Expatriate Payslips"
-        parent="hr_payroll.menu_hr_payslip_menu"
+        parent="hr_payroll.menu_hr_payroll_payslips"
         action="action_hr_payslip_expatriate"
         sequence="12"
         groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
@@ -123,7 +123,7 @@
     <!-- Expatriate Contracts Menu (under Employees/Contracts) -->
     <menuitem id="menu_hr_contract_expatriate"
         name="Expatriate Contracts"
-        parent="hr_contract.menu_human_resources_configuration_contract"
+        parent="hr.menu_hr_employee_payroll"
         action="action_hr_contract_expatriate"
         sequence="11"
         groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
@@ -137,12 +137,12 @@
         <field name="context">{}</field>
     </record>
 
-    <!-- Expatriate Contracts Menu (under Payroll/Contracts) -->
+    <!-- Expatriate Contracts Menu (under Payroll root) -->
     <menuitem id="menu_hr_payroll_contract_expatriate"
         name="Expatriate Contracts"
-        parent="hr_payroll.menu_hr_payroll_configuration"
+        parent="hr_work_entry_contract_enterprise.menu_hr_payroll_root"
         action="action_hr_payroll_contract_expatriate"
-        sequence="2"
+        sequence="55"
         groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
 
 </odoo>
