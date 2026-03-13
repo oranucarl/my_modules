@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Daily Cron: Recompute Expiry Dates for Housing and Documents -->
+    <record id="ir_cron_recompute_expiry_dates" model="ir.cron">
+        <field name="name">Expatriate: Recompute Expiry Dates</field>
+        <field name="model_id" ref="model_expatriate_housing"/>
+        <field name="state">code</field>
+        <field name="code">
+model.cron_recompute_days()
+env['expatriate.document'].cron_recompute_days()
+        </field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active" eval="True"/>
+    </record>
+
+</odoo>

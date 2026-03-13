@@ -108,4 +108,40 @@
         <field name="perm_unlink" eval="True"/>
     </record>
 
+    <!-- ======================= -->
+    <!-- EXPATRIATE MANAGEMENT RECORD RULES -->
+    <!-- ======================= -->
+
+    <!-- expatriate.allowance -->
+    <record id="rule_expatriate_allowance" model="ir.rule">
+        <field name="name">Expatriate Allowance: Expatriate Payroll Manager Only</field>
+        <field name="model_id" ref="model_expatriate_allowance"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
+    </record>
+
+    <!-- expatriate.housing -->
+    <record id="rule_expatriate_housing" model="ir.rule">
+        <field name="name">Expatriate Housing: Expatriate Payroll Manager Only</field>
+        <field name="model_id" ref="model_expatriate_housing"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
+    </record>
+
+    <!-- expatriate.document -->
+    <record id="rule_expatriate_document" model="ir.rule">
+        <field name="name">Expatriate Document: Expatriate Payroll Manager Only</field>
+        <field name="model_id" ref="model_expatriate_document"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
+    </record>
+
+    <!-- expatriate.sponsor.company -->
+    <record id="rule_expatriate_sponsor_company" model="ir.rule">
+        <field name="name">Expatriate Sponsor Company: Expatriate Payroll Manager Only</field>
+        <field name="model_id" ref="model_expatriate_sponsor_company"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
+    </record>
+
 </odoo>

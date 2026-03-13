@@ -1,5 +1,3 @@
-from . import hr_payroll_structure_type
-from . import hr_payslip_run
 from . import hr_employee_category
 from . import hr_employee
 from . import expatriate_sponsor_company

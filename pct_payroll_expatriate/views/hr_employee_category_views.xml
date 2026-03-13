@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Employee Category Form to add is_expatriate field -->
+    <record id="view_employee_category_form_inherit_expatriate" model="ir.ui.view">
+        <field name="name">hr.employee.category.form.inherit.expatriate</field>
+        <field name="model">hr.employee.category</field>
+        <field name="inherit_id" ref="hr.view_employee_category_form"/>
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="is_expatriate"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

@@ -4,22 +4,20 @@
     'category': 'Human Resources',
     'summary': 'Comprehensive expatriate employee management — housing, allowances, documents, and payroll',
     'description': """
-        Comprehensive expatriate management application.
-
-        Features:
+        Standalone expatriate management application.
         - Expatriate employee tracking via employee tags
         - Two-way sync between expatriate tag and non-resident status
         - Monthly allowance tracking with Year/Month grouping
         - Housing management with lease renewal alerts
         - Residence permit and CERPEC document tracking with expiry alerts
         - Sponsor company master data
-        - Segregated payroll management (contracts, payslips, batches)
+        - Replica payroll menus (contracts, payslips, batches) filtered to expatriate data
         - Daily cron for expiry recalculation
-        - Restricted to Expatriate Payroll Manager access group
+        - Restricted to Expatriate Payroll Manager access group only
     """,
-    'author': 'Carlson Oranu',
+    'author': 'PCT',
     'depends': [
-        'base',
+        'pct_payroll_expatriate',
         'hr',
         'hr_contract',
         'hr_payroll',
@@ -30,8 +28,6 @@
         'security/ir.model.access.csv',
         'data/default_data.xml',
         'data/cron.xml',
-        'views/hr_payroll_structure_type_views.xml',
-        'views/hr_payslip_employees_views.xml',
         'views/hr_employee_category_views.xml',
         'views/expatriate_sponsor_company_views.xml',
         'views/expatriate_allowance_views.xml',
@@ -43,5 +39,4 @@
     'application': True,
     'auto_install': False,
     'license': 'LGPL-3',
-    'post_uninstall_hook': 'post_uninstall_hook',
 }

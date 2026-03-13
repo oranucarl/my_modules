@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_expatriate_allowance_manager,expatriate.allowance manager,model_expatriate_allowance,pct_payroll_expatriate.group_hr_payroll_expatriate,1,1,1,1
+access_expatriate_housing_manager,expatriate.housing manager,model_expatriate_housing,pct_payroll_expatriate.group_hr_payroll_expatriate,1,1,1,1
+access_expatriate_document_manager,expatriate.document manager,model_expatriate_document,pct_payroll_expatriate.group_hr_payroll_expatriate,1,1,1,1
+access_expatriate_sponsor_manager,expatriate.sponsor.company manager,model_expatriate_sponsor_company,pct_payroll_expatriate.group_hr_payroll_expatriate,1,1,1,1
