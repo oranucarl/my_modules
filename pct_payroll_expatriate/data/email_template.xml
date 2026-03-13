@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Email Template for Contract Expiry Notifications -->
+    <record id="email_template_contract_expiry_notification" model="mail.template">
+        <field name="name">Contract Expiry Notification</field>
+        <field name="model_id" ref="hr_contract.model_hr_contract"/>
+        <field name="email_from">${object.company_id.email or ''}</field>
+        <field name="email_to">${object.hr_responsible_id.email or ''}</field>
+        <field name="subject">Expiry Alert: ${object.employee_id.name} - Contract/Document Expiring</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial, sans-serif; font-size: 14px;">
+                <p>Dear ${object.hr_responsible_id.name or 'HR Manager'},</p>
+
+                <p>This is an automated notification regarding the contract for <strong>${object.employee_id.name}</strong>.</p>
+
+                <p><strong>Expiry Alerts:</strong></p>
+                <ul>
+                    % for notification in ctx.get('notifications', []):
+                        <li>${notification}</li>
+                    % endfor
+                </ul>
+
+                <p><strong>Contract Details:</strong></p>
+                <ul>
+                    <li><strong>Employee:</strong> ${object.employee_id.name}</li>
+                    <li><strong>Job Position:</strong> ${object.job_id.name or 'N/A'}</li>
+                    <li><strong>Department:</strong> ${object.department_id.name or 'N/A'}</li>
+                    % if object.date_end:
+                        <li><strong>Contract End Date:</strong> ${object.date_end.strftime('%d-%b-%Y')}</li>
+                    % endif
+                    % if object.document_expiry_date:
+                        <li><strong>Document Expiry Date:</strong> ${object.document_expiry_date.strftime('%d-%b-%Y')}</li>
+                        <li><strong>Document Type:</strong> ${object.document_type_id.name or 'N/A'}</li>
+                    % endif
+                    % if object.passport_expiry_date:
+                        <li><strong>Passport Expiry Date:</strong> ${object.passport_expiry_date.strftime('%d-%b-%Y')}</li>
+                    % endif
+                </ul>
+
+                <p>Please take the necessary action to renew or update these documents before they expire.</p>
+
+                <p>
+                    <a href="/web#id=${object.id}&amp;view_type=form&amp;model=hr.contract"
+                       style="background-color: #875A7B; padding: 10px 20px; text-decoration: none; color: #fff; border-radius: 5px; display: inline-block;">
+                        View Contract
+                    </a>
+                </p>
+
+                <p>Best regards,<br/>
+                ${object.company_id.name}</p>
+            </div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+</odoo>

@@ -9,11 +9,21 @@
         <field name="company_id" eval="False"/>
     </record>
 
-    <!-- Default Expatriate Employee Tag -->
-    <record id="employee_tag_expatriate" model="hr.employee.category">
-        <field name="name">Expatriate</field>
-        <field name="is_expatriate" eval="True"/>
-        <field name="color">4</field>
+    <!-- Pre-loaded Document Types -->
+    <record id="document_type_residence_permit" model="expatriate.document.type">
+        <field name="name">Residence Permit</field>
+    </record>
+
+    <record id="document_type_cerpec" model="expatriate.document.type">
+        <field name="name">CERPEC</field>
+    </record>
+
+    <record id="document_type_work_permit" model="expatriate.document.type">
+        <field name="name">Work Permit</field>
+    </record>
+
+    <record id="document_type_visa" model="expatriate.document.type">
+        <field name="name">Visa</field>
     </record>
 
     <!-- Pre-loaded Sponsor Companies -->

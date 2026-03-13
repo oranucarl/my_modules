@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Contract Form View - Add HR Responsible and Documentation Fields -->
+    <record id="view_hr_contract_expatriate_form" model="ir.ui.view">
+        <field name="name">hr.contract.expatriate.form</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <!-- Add HR Responsible after contract_type_id -->
+            <xpath expr="//field[@name='contract_type_id']" position="after">
+                <field name="hr_responsible_id"/>
+            </xpath>
+
+            <!-- Add Document Days Left and Status in header -->
+            <xpath expr="//header" position="inside">
+                <field name="document_days_left" invisible="1"/>
+                <field name="document_alert_status" widget="badge"
+                       invisible="not is_expatriate_contract or not document_expiry_date"
+                       decoration-danger="document_alert_status in ('expired', 'urgent')"
+                       decoration-warning="document_alert_status == 'due_soon'"
+                       decoration-success="document_alert_status == 'safe'"/>
+            </xpath>
+
+            <!-- Add is_expatriate_contract invisible field for visibility control -->
+            <xpath expr="//sheet" position="before">
+                <field name="is_expatriate_contract" invisible="1"/>
+            </xpath>
+
+            <!-- Add Documentation Tab (visible only for expatriate contracts) -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Documentation"
+                      invisible="not is_expatriate_contract"
+                      groups="pct_payroll_expatriate.group_hr_payroll_expatriate">
+                    <group>
+                        <group string="Document Information">
+                            <field name="document_type_id"/>
+                            <field name="sponsor_company_id"/>
+                            <field name="document_number"/>
+                            <field name="document_expiry_date"/>
+                            <field name="document_days_left"/>
+                        </group>
+                        <group string="Passport Information">
+                            <field name="passport_number"/>
+                            <field name="passport_expiry_date"/>
+                            <field name="passport_days_left"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

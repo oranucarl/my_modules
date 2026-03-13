@@ -1,5 +1,7 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_expatriate_allowance_manager,expatriate.allowance manager,model_expatriate_allowance,group_hr_payroll_expatriate,1,1,1,1
 access_expatriate_housing_manager,expatriate.housing manager,model_expatriate_housing,group_hr_payroll_expatriate,1,1,1,1
-access_expatriate_document_manager,expatriate.document manager,model_expatriate_document,group_hr_payroll_expatriate,1,1,1,1
+access_housing_cost_line_manager,housing.cost.line manager,model_housing_cost_line,group_hr_payroll_expatriate,1,1,1,1
+access_expatriate_document_type_manager,expatriate.document.type manager,model_expatriate_document_type,group_hr_payroll_expatriate,1,1,1,1
 access_expatriate_sponsor_manager,expatriate.sponsor.company manager,model_expatriate_sponsor_company,group_hr_payroll_expatriate,1,1,1,1
+access_housing_export_wizard,housing.export.wizard,model_housing_export_wizard,group_hr_payroll_expatriate,1,1,1,1

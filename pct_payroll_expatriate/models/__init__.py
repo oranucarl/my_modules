@@ -2,7 +2,9 @@ from . import hr_payroll_structure_type
 from . import hr_payslip_run
 from . import hr_employee_category
 from . import hr_employee
+from . import hr_contract
 from . import expatriate_sponsor_company
+from . import expatriate_document_type
 from . import expatriate_allowance
 from . import expatriate_housing
-from . import expatriate_document
+from . import housing_cost_line

@@ -46,22 +46,14 @@ class ExpatriateHousing(models.Model):
         compute='_compute_alert_status',
         store=True
     )
-    rent_amount = fields.Monetary(
-        string='Rent Amount'
+
+    # Housing Cost Line Items
+    cost_line_ids = fields.One2many(
+        'housing.cost.line',
+        'housing_id',
+        string='Cost Items'
     )
-    maintenance_charge = fields.Monetary(
-        string='Maintenance Charge & Diesel'
-    )
-    electricity_amount = fields.Monetary(
-        string='NEPA / Electricity'
-    )
-    electricity_type = fields.Selection(
-        [
-            ('metered', 'Metered'),
-            ('fixed', 'Fixed')
-        ],
-        string='Electricity Type'
-    )
+
     total_cost = fields.Monetary(
         string='Total Housing Cost',
         compute='_compute_total_cost',
@@ -115,17 +107,26 @@ class ExpatriateHousing(models.Model):
             else:
                 record.alert_status = 'safe'
 
-    @api.depends('rent_amount', 'maintenance_charge', 'electricity_amount')
+    @api.depends('cost_line_ids', 'cost_line_ids.amount')
     def _compute_total_cost(self):
-        """Calculate total housing cost"""
+        """Calculate total housing cost from line items"""
         for record in self:
-            record.total_cost = (
-                record.rent_amount +
-                record.maintenance_charge +
-                record.electricity_amount
-            )
+            record.total_cost = sum(record.cost_line_ids.mapped('amount'))
 
     def cron_recompute_days(self):
         """Cron job to recompute days to expire for all active housing records"""
         records = self.search([('active', '=', True)])
         records._compute_days_to_expire()
+
+    def action_export_housing_report(self):
+        """Export housing report to Excel"""
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Export Housing Report',
+            'res_model': 'housing.export.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_housing_ids': [(6, 0, self.ids)]
+            }
+        }

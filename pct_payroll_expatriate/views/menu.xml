@@ -225,19 +225,19 @@
               sequence="10"
               groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
 
-    <!-- Payroll: Payslip Batches -->
-    <menuitem id="menu_expatriate_app_payslip_batches"
-              name="Payslip Batches"
-              parent="menu_expatriate_app_payroll"
-              action="action_expatriate_app_payslip_batches"
-              sequence="20"
-              groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
-
     <!-- Payroll: All Payslips -->
     <menuitem id="menu_expatriate_app_all_payslips"
               name="All Payslips"
               parent="menu_expatriate_app_payroll"
               action="action_expatriate_app_all_payslips"
+              sequence="20"
+              groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
+
+    <!-- Payroll: Payslip Batches -->
+    <menuitem id="menu_expatriate_app_payslip_batches"
+              name="Batches"
+              parent="menu_expatriate_app_payroll"
+              action="action_expatriate_app_payslip_batches"
               sequence="30"
               groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
 
@@ -257,12 +257,72 @@
               sequence="40"
               groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
 
-    <!-- DOCUMENTS MENU -->
-    <menuitem id="menu_expatriate_app_documents"
-              name="Documents"
+    <!-- REPORTS PARENT MENU -->
+    <menuitem id="menu_expatriate_app_reports"
+              name="Reports"
               parent="menu_expatriate_root"
-              action="action_expatriate_document"
-              sequence="50"
+              sequence="90"
+              groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
+
+    <!-- Report: Contract Analysis -->
+    <record id="action_report_expatriate_contracts" model="ir.actions.act_window">
+        <field name="name">Contract Analysis</field>
+        <field name="res_model">hr.contract</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="domain">[('structure_type_id.is_expatriate', '=', True)]</field>
+        <field name="context">{'group_by': ['state', 'department_id']}</field>
+    </record>
+
+    <menuitem id="menu_report_expatriate_contracts"
+              name="Contract Analysis"
+              parent="menu_expatriate_app_reports"
+              action="action_report_expatriate_contracts"
+              sequence="10"
+              groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
+
+    <!-- Report: Housing Costs Analysis -->
+    <record id="action_report_housing_costs" model="ir.actions.act_window">
+        <field name="name">Housing Costs Analysis</field>
+        <field name="res_model">housing.cost.line</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="context">{'group_by': ['housing_id', 'name']}</field>
+    </record>
+
+    <menuitem id="menu_report_housing_costs"
+              name="Housing Costs Analysis"
+              parent="menu_expatriate_app_reports"
+              action="action_report_housing_costs"
+              sequence="20"
+              groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
+
+    <!-- Report: Housing Expiry Status -->
+    <record id="action_report_housing_expiry" model="ir.actions.act_window">
+        <field name="name">Housing Expiry Status</field>
+        <field name="res_model">expatriate.housing</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="context">{'group_by': ['alert_status']}</field>
+    </record>
+
+    <menuitem id="menu_report_housing_expiry"
+              name="Housing Expiry Status"
+              parent="menu_expatriate_app_reports"
+              action="action_report_housing_expiry"
+              sequence="30"
+              groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
+
+    <!-- Report: Monthly Allowances -->
+    <record id="action_report_monthly_allowances" model="ir.actions.act_window">
+        <field name="name">Monthly Allowances</field>
+        <field name="res_model">expatriate.allowance</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="context">{'group_by': ['year', 'month', 'employee_id']}</field>
+    </record>
+
+    <menuitem id="menu_report_monthly_allowances"
+              name="Monthly Allowances"
+              parent="menu_expatriate_app_reports"
+              action="action_report_monthly_allowances"
+              sequence="40"
               groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
 
     <!-- CONFIGURATION PARENT MENU -->
@@ -286,6 +346,14 @@
               parent="menu_expatriate_app_configuration"
               action="action_expatriate_sponsor_company"
               sequence="20"
+              groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
+
+    <!-- Configuration: Document Types -->
+    <menuitem id="menu_expatriate_app_document_types"
+              name="Document Types"
+              parent="menu_expatriate_app_configuration"
+              action="action_expatriate_document_type"
+              sequence="30"
               groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
 
 </odoo>

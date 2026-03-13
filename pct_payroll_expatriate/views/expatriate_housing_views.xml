@@ -28,19 +28,21 @@
                             <field name="currency_id" invisible="1"/>
                         </group>
                     </group>
+                    <group>
+                        <group>
+                            <field name="total_cost" widget="monetary"/>
+                        </group>
+                    </group>
                     <notebook>
-                        <page string="Financial Details">
-                            <group>
-                                <group>
-                                    <field name="rent_amount" widget="monetary"/>
-                                    <field name="maintenance_charge" widget="monetary"/>
-                                    <field name="electricity_amount" widget="monetary"/>
-                                </group>
-                                <group>
-                                    <field name="electricity_type"/>
-                                    <field name="total_cost" widget="monetary"/>
-                                </group>
-                            </group>
+                        <page string="Cost Items">
+                            <field name="cost_line_ids">
+                                <tree editable="bottom">
+                                    <field name="date"/>
+                                    <field name="name"/>
+                                    <field name="amount" widget="monetary"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </tree>
+                            </field>
                         </page>
                         <page string="Notes">
                             <field name="notes"/>
@@ -69,8 +71,8 @@
                        decoration-danger="alert_status in ('expired', 'urgent')"
                        decoration-warning="alert_status == 'due_soon'"
                        decoration-success="alert_status == 'safe'"/>
-                <field name="rent_amount"/>
                 <field name="total_cost"/>
+                <button name="action_export_housing_report" type="object" string="Export to Excel" icon="fa-file-excel-o"/>
             </list>
         </field>
     </record>
