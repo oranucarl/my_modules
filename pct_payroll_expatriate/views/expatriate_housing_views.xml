@@ -35,14 +35,7 @@
                     </group>
                     <notebook>
                         <page string="Cost Items">
-                            <field name="cost_line_ids">
-                                <tree editable="bottom">
-                                    <field name="date"/>
-                                    <field name="name"/>
-                                    <field name="amount" widget="monetary"/>
-                                    <field name="currency_id" column_invisible="1"/>
-                                </tree>
-                            </field>
+                            <field name="cost_line_ids" context="{'default_housing_id': id}" mode="list"/>
                         </page>
                         <page string="Notes">
                             <field name="notes"/>

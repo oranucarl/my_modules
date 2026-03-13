@@ -65,7 +65,7 @@
     </record>
 
     <!-- Update Payroll/Contracts menu -->
-    <record id="hr_payroll.menu_hr_payroll_employees_root" model="ir.ui.menu">
+    <record id="hr_payroll.hr_menu_all_contracts" model="ir.ui.menu">
         <field name="action" ref="action_hr_payroll_contract_non_expatriate"/>
     </record>
 

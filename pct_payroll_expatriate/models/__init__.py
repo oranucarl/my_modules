@@ -6,5 +6,5 @@ from . import hr_contract
 from . import expatriate_sponsor_company
 from . import expatriate_document_type
 from . import expatriate_allowance
-from . import expatriate_housing
 from . import housing_cost_line
+from . import expatriate_housing

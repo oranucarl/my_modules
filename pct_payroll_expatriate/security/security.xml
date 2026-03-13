@@ -109,6 +109,59 @@
     </record>
 
     <!-- ======================= -->
+    <!-- BASE RULE OVERRIDES     -->
+    <!-- (Add expatriate restriction to original functionality) -->
+    <!-- ======================= -->
+
+    <!-- Override: HR Contract - Contract Manager (original: full access) -->
+    <record id="hr_contract.ir_rule_hr_contract_manager" model="ir.rule">
+        <field name="name">HR Contract: Contract Manager</field>
+        <field name="model_id" ref="hr_contract.model_hr_contract"/>
+        <field name="domain_force">[('structure_type_id.is_expatriate', '!=', True)]</field>
+        <field name="groups" eval="[(4, ref('hr_contract.group_hr_contract_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Override: HR Contract - Employee Manager (original: employee/manager filter) -->
+    <record id="hr_contract.ir_rule_hr_contract_employee_manager" model="ir.rule">
+        <field name="name">HR Contract: Employee Manager</field>
+        <field name="model_id" ref="hr_contract.model_hr_contract"/>
+        <field name="domain_force">['&amp;', '|', ('employee_id.parent_id.user_id', '=', user.id), ('employee_id.user_id', '=', user.id), ('structure_type_id.is_expatriate', '!=', True)]</field>
+        <field name="groups" eval="[(4, ref('hr_contract.group_hr_contract_employee_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Override: HR Payslip - Manager (original: full access) -->
+    <record id="hr_payroll.hr_payslip_rule_manager" model="ir.rule">
+        <field name="name">All Payslip</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
+        <field name="domain_force">[('contract_id.structure_type_id.is_expatriate', '!=', True)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Override: HR Payslip - Officer (original: employee/department filter) -->
+    <record id="hr_payroll.hr_payroll_rule_officer" model="ir.rule">
+        <field name="name">Officer and subordinates Payslip</field>
+        <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
+        <field name="domain_force">['&amp;', '|', '|', ('employee_id.user_id', '=', user.id), ('employee_id.department_id', '=', False), ('employee_id.department_id.manager_id.user_id', '=', user.id), ('contract_id.structure_type_id.is_expatriate', '!=', True)]</field>
+        <field name="groups" eval="[(4, ref('hr_payroll.group_hr_payroll_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- ======================= -->
     <!-- EXPATRIATE MANAGEMENT RECORD RULES -->
     <!-- ======================= -->
 
@@ -141,7 +194,7 @@
         <field name="name">Expatriate Document Type: Expatriate Payroll Manager Only</field>
         <field name="model_id" ref="model_expatriate_document_type"/>
         <field name="domain_force">[(1, '=', 1)]</field>
-        <field name="groups" eval="[(4, ref='pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
+        <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
     </record>
 
     <!-- expatriate.sponsor.company -->

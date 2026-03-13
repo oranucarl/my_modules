@@ -4,7 +4,6 @@ from odoo import api, fields, models
 class HousingCostLine(models.Model):
     _name = 'housing.cost.line'
     _description = 'Housing Cost Line'
-    _order = 'date desc, id desc'
 
     housing_id = fields.Many2one(
         'expatriate.housing',
@@ -19,14 +18,16 @@ class HousingCostLine(models.Model):
     date = fields.Date(
         string='Date',
         required=True,
-        default=fields.Date.context_today
+        default=fields.Date.today
     )
     amount = fields.Monetary(
         string='Amount',
-        required=True
+        required=True,
+        currency_field='currency_id'
     )
     currency_id = fields.Many2one(
-        related='housing_id.currency_id',
-        store=True,
-        readonly=True
+        'res.currency',
+        string='Currency',
+        default=lambda self: self.env.company.currency_id,
+        required=True
     )

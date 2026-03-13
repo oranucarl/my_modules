@@ -1,8 +1,48 @@
 from odoo import api, SUPERUSER_ID
 
 
-def post_uninstall_hook(env):
-    """Restore original menu actions when module is uninstalled"""
+def uninstall_hook(env):
+    """Restore original menu actions and record rules when module is uninstalled"""
+
+    # =============================================
+    # RESTORE ORIGINAL RECORD RULES
+    # =============================================
+
+    # Restore hr_contract.ir_rule_hr_contract_manager - original: [(1, '=', 1)]
+    try:
+        rule = env.ref('hr_contract.ir_rule_hr_contract_manager', raise_if_not_found=False)
+        if rule:
+            rule.domain_force = "[(1, '=', 1)]"
+    except Exception:
+        pass
+
+    # Restore hr_contract.ir_rule_hr_contract_employee_manager - original domain
+    try:
+        rule = env.ref('hr_contract.ir_rule_hr_contract_employee_manager', raise_if_not_found=False)
+        if rule:
+            rule.domain_force = "['|', ('employee_id.parent_id.user_id', '=', user.id), ('employee_id.user_id', '=', user.id)]"
+    except Exception:
+        pass
+
+    # Restore hr_payroll.hr_payslip_rule_manager - original: [(1, '=', 1)]
+    try:
+        rule = env.ref('hr_payroll.hr_payslip_rule_manager', raise_if_not_found=False)
+        if rule:
+            rule.domain_force = "[(1, '=', 1)]"
+    except Exception:
+        pass
+
+    # Restore hr_payroll.hr_payroll_rule_officer - original domain
+    try:
+        rule = env.ref('hr_payroll.hr_payroll_rule_officer', raise_if_not_found=False)
+        if rule:
+            rule.domain_force = "['|', '|', ('employee_id.user_id', '=', user.id), ('employee_id.department_id', '=', False), ('employee_id.department_id.manager_id.user_id', '=', user.id)]"
+    except Exception:
+        pass
+
+    # =============================================
+    # RESTORE ORIGINAL MENU ACTIONS
+    # =============================================
 
     # Restore Payroll → Payslips → Batches menu
     try:
@@ -33,7 +73,7 @@ def post_uninstall_hook(env):
 
     # Restore Payroll → Contracts menu
     try:
-        menu_payroll_contracts = env.ref('hr_payroll.menu_hr_payroll_employees_root', raise_if_not_found=False)
+        menu_payroll_contracts = env.ref('hr_payroll.hr_menu_all_contracts', raise_if_not_found=False)
         action_contracts = env.ref('hr_contract.action_hr_contract', raise_if_not_found=False)
         if menu_payroll_contracts and action_contracts:
             menu_payroll_contracts.action = 'ir.actions.act_window,%s' % action_contracts.id

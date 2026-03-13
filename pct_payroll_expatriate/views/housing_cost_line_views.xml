@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Housing Cost Line Tree View -->
+    <record id="view_housing_cost_line_tree" model="ir.ui.view">
+        <field name="name">housing.cost.line.tree</field>
+        <field name="model">housing.cost.line</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="date"/>
+                <field name="name"/>
+                <field name="amount" widget="monetary"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+</odoo>
