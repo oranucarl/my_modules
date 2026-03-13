@@ -137,12 +137,12 @@
         <field name="context">{}</field>
     </record>
 
-    <!-- Expatriate Contracts Menu (under Payroll root) -->
+    <!-- Expatriate Contracts Menu (under Payroll/Contracts) -->
     <menuitem id="menu_hr_payroll_contract_expatriate"
         name="Expatriate Contracts"
-        parent="hr_work_entry_contract_enterprise.menu_hr_payroll_root"
+        parent="hr_payroll.menu_hr_payroll_employees_root"
         action="action_hr_payroll_contract_expatriate"
-        sequence="55"
+        sequence="32"
         groups="pct_payroll_expatriate.group_hr_payroll_expatriate"/>
 
 </odoo>
