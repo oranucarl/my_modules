@@ -1,7 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_hr_work_location_hr_user,hr.work.location hr user,hr.model_hr_work_location,hr.group_hr_user,1,0,0,0
+access_hr_department_hr_user_readonly,hr.department hr user readonly,hr.model_hr_department,hr.group_hr_user,1,0,0,0
 access_hr_employee_category_hr_user_readonly,hr.employee.category hr user readonly,hr.model_hr_employee_category,hr.group_hr_user,1,0,0,0
 access_hr_job_hr_user_readonly,hr.job hr user readonly,hr.model_hr_job,hr.group_hr_user,1,0,0,0
-access_hr_contract_type_hr_user_readonly,hr.contract.type hr user readonly,hr_contract.model_hr_contract_type,hr.group_hr_user,1,0,0,0
+access_hr_contract_type_hr_user_readonly,hr.contract.type hr user readonly,hr.model_hr_contract_type,hr.group_hr_user,1,0,0,0
 access_resource_calendar_hr_user_readonly,resource.calendar hr user readonly,resource.model_resource_calendar,hr.group_hr_user,1,0,0,0
 access_resource_calendar_attendance_hr_user_readonly,resource.calendar.attendance hr user readonly,resource.model_resource_calendar_attendance,hr.group_hr_user,1,0,0,0

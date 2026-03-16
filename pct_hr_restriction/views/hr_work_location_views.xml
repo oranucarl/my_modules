@@ -5,7 +5,7 @@
     <record id="hr_work_location_view_form_inherit" model="ir.ui.view">
         <field name="name">hr.work.location.form.inherit.pct_hr_restriction</field>
         <field name="model">hr.work.location</field>
-        <field name="inherit_id" ref="hr.hr_work_location_view_form"/>
+        <field name="inherit_id" ref="hr.hr_work_location_form_view"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='company_id']" position="after">
                 <!--
@@ -28,7 +28,7 @@
     <record id="hr_work_location_view_tree_inherit" model="ir.ui.view">
         <field name="name">hr.work.location.tree.inherit.pct_hr_restriction</field>
         <field name="model">hr.work.location</field>
-        <field name="inherit_id" ref="hr.hr_work_location_view_tree"/>
+        <field name="inherit_id" ref="hr.hr_work_location_tree_view"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='company_id']" position="after">
                 <field name="site_hr_officer_ids" widget="many2many_tags" optional="show"/>

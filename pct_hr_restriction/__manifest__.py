@@ -19,10 +19,11 @@ Features:
     - If assigned to work locations: Full access to employees at those locations
     - If not assigned to any location: Access only to their own employee record
 * HR Officers get read-only access to:
+    - Departments
     - Employee Categories
     - Job Positions
-    - Contract Types
-    - Working Schedules
+    - Contract Types (Employment Types)
+    - Working Schedules (Resource Calendars)
 * Regular users: Menu-level restriction (not record rules) to preserve
     related field selections in Expenses, Timesheets, etc.
 
@@ -30,12 +31,11 @@ Uninstall Hook:
 ---------------
 When uninstalled, all modified record rules are reset to their original values.
     """,
-    'author': 'Packetclouds Technology',
+    'author': 'Carlson Oranu',
     'website': 'https://www.packetclouds.com',
     'depends': [
         'base',
         'hr',
-        'hr_contract',
         'resource',
     ],
     'data': [

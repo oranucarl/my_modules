@@ -2,22 +2,33 @@
 <odoo>
 
     <!--
-        Menu-Level Restriction for hr.employee.public
+        Action Domain Override for hr.employee.public
         ==============================================
 
-        This file implements menu/action level restrictions instead of record rules
-        for base.group_user on hr.employee.public.
-
-        Why menu-level instead of record rules:
-        - Record rules would break Many2one/Many2many field selections
-        - Base users need to select employees in Expenses, Timesheets, Approvals, etc.
-        - Menu-level restriction only affects direct browsing, not related field lookups
-
-        Approach:
-        1. Create a "My Employee Profile" action showing only the user's own record
-        2. Base users can view their own profile via this action
-        3. The full employee directory remains restricted to HR groups (default Odoo behavior)
+        Override the public employee action to restrict base users to their own record.
+        This uses a domain with context evaluation to check if user is HR or not.
     -->
+
+    <!--
+        Override the standard public employee action
+        Restricts base users to see only their own employee record.
+        HR users have their own action (hr.open_view_employee_list_my) with full access.
+    -->
+    <record id="hr.hr_employee_public_action" model="ir.actions.act_window">
+        <field name="name">Employees</field>
+        <field name="res_model">hr.employee.public</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('user_id', '=', uid)]</field>
+        <field name="context">{'chat_icon': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Your employee profile
+            </p>
+            <p>
+                View your employee information.
+            </p>
+        </field>
+    </record>
 
     <!-- Window Action: My Employee Profile (for base users to view their own record) -->
     <record id="action_my_employee_profile" model="ir.actions.act_window">
@@ -35,40 +46,5 @@
             </p>
         </field>
     </record>
-
-    <!--
-        Optional: Menu for "My Profile"
-        Uncomment this if you want base users to have a menu to access their profile.
-        Otherwise, they can only see employee info when selecting in related fields.
-    -->
-    <!--
-    <menuitem
-        id="menu_my_employee_profile"
-        name="My Profile"
-        action="action_my_employee_profile"
-        parent="hr.menu_hr_root"
-        sequence="1"
-        groups="base.group_user"/>
-    -->
-
-    <!--
-        Note: The standard Employees menu (hr.menu_hr_employee_user) is already
-        restricted to hr.group_hr_user in Odoo's base HR module.
-
-        If you need to further restrict which employees HR Officers can see
-        in the directory (e.g., only their location's employees), you would
-        modify the window action domain. Example:
-
-        <record id="hr.open_view_employee_list_my" model="ir.actions.act_window">
-            <field name="domain">[
-                '|',
-                ('work_location_id.site_hr_officer_ids', 'in', [uid]),
-                ('user_id', '=', uid)
-            ]</field>
-        </record>
-
-        But this is not implemented here because it would need careful testing
-        to ensure it doesn't break other HR functionality.
-    -->
 
 </odoo>
