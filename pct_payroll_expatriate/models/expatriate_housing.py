@@ -119,7 +119,19 @@ class ExpatriateHousing(models.Model):
         records._compute_days_to_expire()
 
     def action_export_housing_report(self):
-        """Export housing report to Excel"""
+        """Export housing report to Excel
+
+        If called with selected records, exports only those.
+        If called without selection (from header button), exports all records.
+        """
+        # Get selected records from context or use all visible records
+        active_ids = self._context.get('active_ids', [])
+        if active_ids:
+            housing_ids = active_ids
+        else:
+            # No selection - export all records matching the current search
+            housing_ids = self.search([]).ids
+
         return {
             'type': 'ir.actions.act_window',
             'name': 'Export Housing Report',
@@ -127,6 +139,6 @@ class ExpatriateHousing(models.Model):
             'view_mode': 'form',
             'target': 'new',
             'context': {
-                'default_housing_ids': [(6, 0, self.ids)]
+                'default_housing_ids': [(6, 0, housing_ids)]
             }
         }

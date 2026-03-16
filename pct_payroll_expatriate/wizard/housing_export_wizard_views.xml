@@ -6,7 +6,16 @@
         <field name="model">housing.export.wizard</field>
         <field name="arch" type="xml">
             <form string="Export Housing Report">
+                <group invisible="excel_file">
+                    <p class="text-muted">
+                        Click "Generate Report" to export the selected housing records to Excel.
+                    </p>
+                    <field name="housing_ids" widget="many2many_tags" readonly="1"/>
+                </group>
                 <group invisible="not excel_file">
+                    <p class="text-success">
+                        Report generated successfully. Click the download link below.
+                    </p>
                     <field name="excel_file" filename="filename" readonly="1"/>
                     <field name="filename" invisible="1"/>
                 </group>

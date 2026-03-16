@@ -8,17 +8,7 @@
         <field name="arch" type="xml">
             <!-- Add HR Responsible after contract_type_id -->
             <xpath expr="//field[@name='contract_type_id']" position="after">
-                <field name="hr_responsible_id"/>
-            </xpath>
-
-            <!-- Add Document Days Left and Status in header -->
-            <xpath expr="//header" position="inside">
-                <field name="document_days_left" invisible="1"/>
-                <field name="document_alert_status" widget="badge"
-                       invisible="not is_expatriate_contract or not document_expiry_date"
-                       decoration-danger="document_alert_status in ('expired', 'urgent')"
-                       decoration-warning="document_alert_status == 'due_soon'"
-                       decoration-success="document_alert_status == 'safe'"/>
+                <field name="hr_responsible_id" help="HR person responsible for this contract. They will receive email notifications 10 days before and on the day of contract end, document expiry, or passport expiry."/>
             </xpath>
 
             <!-- Add is_expatriate_contract invisible field for visibility control -->
@@ -38,6 +28,11 @@
                             <field name="document_number"/>
                             <field name="document_expiry_date"/>
                             <field name="document_days_left"/>
+                            <field name="document_alert_status" widget="badge"
+                                   invisible="not document_expiry_date"
+                                   decoration-danger="document_alert_status in ('expired', 'urgent')"
+                                   decoration-warning="document_alert_status == 'due_soon'"
+                                   decoration-success="document_alert_status == 'safe'"/>
                         </group>
                         <group string="Passport Information">
                             <field name="passport_number"/>
@@ -46,6 +41,22 @@
                         </group>
                     </group>
                 </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Contract List View - Add Document Type and Alert Status -->
+    <record id="view_hr_contract_expatriate_list" model="ir.ui.view">
+        <field name="name">hr.contract.expatriate.list</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date_end']" position="after">
+                <field name="document_type_id" optional="hide"/>
+                <field name="document_alert_status" widget="badge" optional="hide"
+                       decoration-danger="document_alert_status in ('expired', 'urgent')"
+                       decoration-warning="document_alert_status == 'due_soon'"
+                       decoration-success="document_alert_status == 'safe'"/>
             </xpath>
         </field>
     </record>

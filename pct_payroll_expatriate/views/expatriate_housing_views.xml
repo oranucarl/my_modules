@@ -55,6 +55,9 @@
             <list string="Expatriate Housing"
                   decoration-danger="alert_status in ('expired', 'urgent')"
                   decoration-warning="alert_status == 'due_soon'">
+                <header>
+                    <button name="action_export_housing_report" type="object" string="Export to Excel" icon="fa-file-excel-o"/>
+                </header>
                 <field name="employee_id"/>
                 <field name="location"/>
                 <field name="housing_type"/>
@@ -65,7 +68,6 @@
                        decoration-warning="alert_status == 'due_soon'"
                        decoration-success="alert_status == 'safe'"/>
                 <field name="total_cost"/>
-                <button name="action_export_housing_report" type="object" string="Export to Excel" icon="fa-file-excel-o"/>
             </list>
         </field>
     </record>

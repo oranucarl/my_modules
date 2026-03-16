@@ -47,4 +47,29 @@
         <field name="name">Shahin Construction</field>
     </record>
 
+    <!-- Housing Cost Products (Service Type) -->
+    <record id="product_housing_rent" model="product.product">
+        <field name="name">Rent</field>
+        <field name="type">service</field>
+        <field name="categ_id" ref="product.cat_expense"/>
+        <field name="sale_ok" eval="False"/>
+        <field name="purchase_ok" eval="True"/>
+    </record>
+
+    <record id="product_housing_maintenance" model="product.product">
+        <field name="name">Maintenance Charge &amp; Diesel</field>
+        <field name="type">service</field>
+        <field name="categ_id" ref="product.cat_expense"/>
+        <field name="sale_ok" eval="False"/>
+        <field name="purchase_ok" eval="True"/>
+    </record>
+
+    <record id="product_housing_electricity" model="product.product">
+        <field name="name">NEPA / Electricity</field>
+        <field name="type">service</field>
+        <field name="categ_id" ref="product.cat_expense"/>
+        <field name="sale_ok" eval="False"/>
+        <field name="purchase_ok" eval="True"/>
+    </record>
+
 </odoo>

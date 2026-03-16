@@ -25,6 +25,7 @@
         'hr_contract',
         'hr_payroll',
         'mail',
+        'product',
     ],
     'data': [
         'security/security.xml',

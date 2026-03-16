@@ -15,14 +15,17 @@ class HrContract(models.Model):
     # Expatriate Documentation Fields
     document_type_id = fields.Many2one(
         'expatriate.document.type',
-        string='Document Type'
+        string='Document Type',
+        tracking=True
     )
     sponsor_company_id = fields.Many2one(
         'expatriate.sponsor.company',
-        string='Sponsoring Company'
+        string='Sponsoring Company',
+        tracking=True
     )
     document_number = fields.Char(
-        string='Document Number'
+        string='Document Number',
+        tracking=True
     )
     document_expiry_date = fields.Date(
         string='Document Expiry Date',
@@ -45,7 +48,8 @@ class HrContract(models.Model):
         store=True
     )
     passport_number = fields.Char(
-        string='Passport Number'
+        string='Passport Number',
+        tracking=True
     )
     passport_expiry_date = fields.Date(
         string='Passport Expiration Date',
