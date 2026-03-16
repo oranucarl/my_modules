@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Inherit Work Location Form View to add Site HR Officers field -->
+    <record id="hr_work_location_view_form_inherit" model="ir.ui.view">
+        <field name="name">hr.work.location.form.inherit.pct_hr_restriction</field>
+        <field name="model">hr.work.location</field>
+        <field name="inherit_id" ref="hr.hr_work_location_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <!--
+                    Domain restricts selection to:
+                    - Non-portal/public users (share = False)
+                    - Users whose employee is assigned to this work location
+                    This ensures Site HR Officers can also manage their own records
+                    since they work at the location they're responsible for.
+                -->
+                <field name="site_hr_officer_ids"
+                    widget="many2many_tags"
+                    domain="[('share', '=', False), ('employee_id.work_location_id', '=', id)]"
+                    options="{'color_field': 'color'}"
+                    placeholder="Assign HR Officers for this location..."/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit Work Location Tree View to show Site HR Officers -->
+    <record id="hr_work_location_view_tree_inherit" model="ir.ui.view">
+        <field name="name">hr.work.location.tree.inherit.pct_hr_restriction</field>
+        <field name="model">hr.work.location</field>
+        <field name="inherit_id" ref="hr.hr_work_location_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="site_hr_officer_ids" widget="many2many_tags" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

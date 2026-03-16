@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- ============================================================ -->
+        <!-- RECORD RULES FOR hr.employee (HR Officers with location-based access) -->
+        <!-- ============================================================ -->
+
+        <!--
+            HR Officer (hr.group_hr_user) Access Rule:
+            - If user is assigned as Site HR Officer to a work location:
+              They can access all employees at that location
+            - If user is NOT assigned to any work location:
+              They can only access their own employee record
+            - In both cases, users can always see their own record
+        -->
+        <record id="hr_employee_hr_officer_location_rule" model="ir.rule">
+            <field name="name">HR Employee: Location-based HR Officer Access</field>
+            <field name="model_id" ref="hr.model_hr_employee"/>
+            <field name="domain_force">[
+                '|',
+                ('work_location_id.site_hr_officer_ids', 'in', [user.id]),
+                ('user_id', '=', user.id)
+            ]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- RECORD RULES FOR hr.employee.public -->
+        <!-- ============================================================ -->
+
+        <!--
+            IMPORTANT: We intentionally DO NOT add a record rule for base.group_user
+            on hr.employee.public because:
+
+            1. Record rules affect ALL access including Many2one/Many2many field lookups
+            2. This would break employee selection in Expenses, Timesheets, Approvals, etc.
+            3. Base users need to see other employees' names when selecting related records
+
+            Instead, we restrict the MENU/WINDOW ACTION for browsing employee directory.
+            See views/hr_employee_public_menu.xml for menu-level restrictions.
+
+            This approach:
+            - Allows base users to select employees in related fields (expenses, etc.)
+            - Prevents base users from browsing the full employee directory
+            - Is the safest option that doesn't break other modules
+        -->
+
+        <!--
+            HR Officer (hr.group_hr_user) Public Employee Access:
+            HR Officers can see public employee records at their assigned locations
+            or their own record.
+        -->
+        <record id="hr_employee_public_hr_officer_rule" model="ir.rule">
+            <field name="name">Public Employee: Location-based HR Officer Access</field>
+            <field name="model_id" ref="hr.model_hr_employee_public"/>
+            <field name="domain_force">[
+                '|',
+                ('work_location_id.site_hr_officer_ids', 'in', [user.id]),
+                ('user_id', '=', user.id)
+            ]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!--
+            HR Manager (hr.group_hr_manager) has full access:
+            No restrictions needed - they retain default full access behavior.
+            This explicit rule ensures managers can see all records.
+        -->
+        <record id="hr_employee_public_hr_manager_rule" model="ir.rule">
+            <field name="name">Public Employee: Full Access for HR Managers</field>
+            <field name="model_id" ref="hr.model_hr_employee_public"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- HR MANAGER FULL ACCESS RULES -->
+        <!-- ============================================================ -->
+
+        <!--
+            Ensure HR Manager retains full access to hr.employee.
+            This rule explicitly grants full access to all employee records.
+        -->
+        <record id="hr_employee_hr_manager_full_access_rule" model="ir.rule">
+            <field name="name">HR Employee: Full Access for HR Managers</field>
+            <field name="model_id" ref="hr.model_hr_employee"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- READ-ONLY ACCESS RULES FOR HR OFFICERS -->
+        <!-- These rules restrict hr.group_hr_user to read-only access   -->
+        <!-- on configuration models (categories, jobs, contract types,  -->
+        <!-- resource calendars)                                          -->
+        <!-- ============================================================ -->
+
+        <!--
+            HR Officer (hr.group_hr_user) Read-Only Access to Employee Categories
+            Can view all categories but cannot create, modify, or delete them.
+        -->
+        <record id="hr_employee_category_hr_user_readonly_rule" model="ir.rule">
+            <field name="name">Employee Category: Read-Only for HR Officers</field>
+            <field name="model_id" ref="hr.model_hr_employee_category"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!--
+            HR Officer (hr.group_hr_user) Read-Only Access to Job Positions
+            Can view all jobs but cannot create, modify, or delete them.
+        -->
+        <record id="hr_job_hr_user_readonly_rule" model="ir.rule">
+            <field name="name">Job Position: Read-Only for HR Officers</field>
+            <field name="model_id" ref="hr.model_hr_job"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!--
+            HR Officer (hr.group_hr_user) Read-Only Access to Contract Types
+            Can view all contract types but cannot create, modify, or delete them.
+        -->
+        <record id="hr_contract_type_hr_user_readonly_rule" model="ir.rule">
+            <field name="name">Contract Type: Read-Only for HR Officers</field>
+            <field name="model_id" ref="hr_contract.model_hr_contract_type"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!--
+            HR Officer (hr.group_hr_user) Read-Only Access to Resource Calendars
+            Can view all working schedules but cannot create, modify, or delete them.
+        -->
+        <record id="resource_calendar_hr_user_readonly_rule" model="ir.rule">
+            <field name="name">Resource Calendar: Read-Only for HR Officers</field>
+            <field name="model_id" ref="resource.model_resource_calendar"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!--
+            HR Officer (hr.group_hr_user) Read-Only Access to Calendar Attendance Lines
+            Part of resource calendar, also restricted to read-only.
+        -->
+        <record id="resource_calendar_attendance_hr_user_readonly_rule" model="ir.rule">
+            <field name="name">Calendar Attendance: Read-Only for HR Officers</field>
+            <field name="model_id" ref="resource.model_resource_calendar_attendance"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+    </data>
+</odoo>
