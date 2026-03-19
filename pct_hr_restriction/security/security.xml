@@ -140,10 +140,64 @@
         </record>
 
         <!-- ============================================================ -->
+        <!-- OVERRIDE EXISTING ODOO RULES TO RESTRICT TO HR MANAGER -->
+        <!-- These base rules have no groups and grant full access to all. -->
+        <!-- We override them to restrict to hr.group_hr_manager only. -->
+        <!-- ============================================================ -->
+
+        <!--
+            Override: Department multi company rule
+            Original: No groups (all users), full CRUD
+            Changed: Restricted to hr.group_hr_manager only
+        -->
+        <record id="hr.hr_dept_comp_rule" model="ir.rule">
+            <field name="name">Department multi company rule</field>
+            <field name="model_id" ref="hr.model_hr_department"/>
+            <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!--
+            Override: Job multi company rule
+            Original: No groups (all users), full CRUD
+            Changed: Restricted to hr.group_hr_manager only
+        -->
+        <record id="hr.hr_job_comp_rule" model="ir.rule">
+            <field name="name">Job multi company rule</field>
+            <field name="model_id" ref="hr.model_hr_job"/>
+            <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!--
+            Override: HR Contract Type multi company rule
+            Original: No groups (all users), full CRUD
+            Changed: Restricted to hr.group_hr_manager only
+        -->
+        <record id="hr.ir_rule_hr_contract_type_multi_company" model="ir.rule">
+            <field name="name">HR Contract Type: Multi Company</field>
+            <field name="model_id" ref="hr.model_hr_contract_type"/>
+            <field name="domain_force">['|', ('country_id', '=', False), ('country_id', 'in', user.env.companies.country_id.ids)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- ============================================================ -->
         <!-- READ-ONLY ACCESS RULES FOR HR OFFICERS -->
-        <!-- These rules restrict hr.group_hr_user to read-only access   -->
-        <!-- on configuration models (categories, jobs, contract types,  -->
-        <!-- resource calendars)                                          -->
+        <!-- These rules grant hr.group_hr_user read-only access to       -->
+        <!-- configuration models (categories, jobs, contract types,      -->
+        <!-- resource calendars, departments)                             -->
         <!-- ============================================================ -->
 
         <!--
@@ -153,7 +207,7 @@
         <record id="hr_department_hr_user_readonly_rule" model="ir.rule">
             <field name="name">Department: Read-Only for HR Officers</field>
             <field name="model_id" ref="hr.model_hr_department"/>
-            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
             <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
@@ -183,7 +237,7 @@
         <record id="hr_job_hr_user_readonly_rule" model="ir.rule">
             <field name="name">Job Position: Read-Only for HR Officers</field>
             <field name="model_id" ref="hr.model_hr_job"/>
-            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
             <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
@@ -198,7 +252,7 @@
         <record id="hr_contract_type_hr_user_readonly_rule" model="ir.rule">
             <field name="name">Contract Type: Read-Only for HR Officers</field>
             <field name="model_id" ref="hr.model_hr_contract_type"/>
-            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="domain_force">['|', ('country_id', '=', False), ('country_id', 'in', user.env.companies.country_id.ids)]</field>
             <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
