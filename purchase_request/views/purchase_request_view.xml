@@ -13,7 +13,7 @@
                         string="Reset"
                         invisible="state not in ('done', 'rejected')"
                         type="object"
-                        groups="purchase_request.group_purchase_request_manager"
+                        groups="purchase_request.group_purchase_request_manager,purchase_request.group_purchase_request_administrator"
                     />
                     <button
                         name="button_to_approve"
@@ -28,14 +28,14 @@
                         string="Approve"
                         type="object"
                         class="oe_highlight"
-                        groups="purchase_request.group_purchase_request_manager"
+                        groups="purchase_request.group_purchase_request_manager,purchase_request.group_purchase_request_administrator"
                     />
                     <button
                         name="button_in_progress"
                         invisible="state != 'approved'"
                         string="In Progress"
                         type="object"
-                        groups="purchase_request.group_purchase_request_manager"
+                        groups="purchase_request.group_purchase_request_manager,purchase_request.group_purchase_request_officer"
                     />
                     <button
                         name="%(action_purchase_request_line_make_purchase_order)d"
@@ -56,7 +56,7 @@
                         string="Done"
                         type="object"
                         class="oe_highlight"
-                        groups="purchase_request.group_purchase_request_manager"
+                        groups="purchase_request.group_purchase_request_manager,purchase_request.group_purchase_request_officer"
                     />
                     <button
                         name="button_rejected"
@@ -68,17 +68,34 @@
                     <button
                         name="button_on_hold"
                         invisible="state != 'to_approve'"
-                        string="On Hold"
+                        string="Put On Hold"
                         type="object"
-                        groups="purchase_request.group_purchase_request_user"
+                        groups="purchase_request.group_purchase_request_user,purchase_request.group_purchase_request_administrator"
                     />
                     <button
                         name="button_remove_on_hold"
                         invisible="state != 'on_hold'"
-                        string="Remove On Hold"
+                        string="Remove Hold"
                         type="object"
                         class="oe_highlight"
-                        groups="purchase_request.group_purchase_request_manager,purchase_request.group_purchase_request_administrator"
+                        groups="purchase_request.group_purchase_request_user,purchase_request.group_purchase_request_administrator"
+                    />
+                    <!-- Purchase Officer: On Hold only for their own PRs -->
+                    <field name="requested_by" invisible="1"/>
+                    <button
+                        name="button_on_hold"
+                        invisible="state != 'to_approve' or requested_by != uid"
+                        string="Put On Hold"
+                        type="object"
+                        groups="purchase_request.group_purchase_request_officer"
+                    />
+                    <button
+                        name="button_remove_on_hold"
+                        invisible="state != 'on_hold' or requested_by != uid"
+                        string="Remove Hold"
+                        type="object"
+                        class="oe_highlight"
+                        groups="purchase_request.group_purchase_request_officer"
                     />
                     <field
                         name="state"
@@ -183,9 +200,15 @@
                         </group>
                         <group>
                             <field name="date_start" readonly="1" />
+                            <field name="allowed_project_ids" invisible="1" />
+                            <field
+                                name="project_id"
+                                readonly="is_editable == False"
+                                domain="[('id', 'in', allowed_project_ids)]"
+                            />
                             <field
                                 name="picking_type_id"
-                                readonly="is_editable == False"
+                                readonly="1"
                             />
                             <field name="company_id" invisible="1" />
                             <field
@@ -224,10 +247,10 @@
                                         widget="analytic_distribution"
                                         groups="analytic.group_analytic_accounting"
                                         options="{'product_field': 'product_id', 'business_domain': 'purchase_order'}"
-                                        optional="hide"
+                                        optional="show"
+                                        required="1"
                                     />
                                     <field name="date_required" />
-                                    <field name="estimated_cost" widget="monetary" readonly="parent.state in ('draft', 'to_approve', 'on_hold')" />
                                     <field name="currency_id" column_invisible="1" />
                                     <field name="cancelled" column_invisible="1" />
                                     <field name="is_editable" column_invisible="1" />
@@ -253,19 +276,6 @@
                                     />
                                 </list>
                             </field>
-                            <group class="oe_subtotal_footer oe_right">
-                                <field name="currency_id" invisible="1" />
-                                <div class="oe_subtotal_footer_separator oe_inline">
-                                    <label for="estimated_cost" />
-                                </div>
-                                <field
-                                    name="estimated_cost"
-                                    nolabel="1"
-                                    class="oe_subtotal_footer_separator"
-                                    widget="monetary"
-                                    options="{'currency_field': 'currency_id'}"
-                                />
-                            </group>
                         </page>
                         <page string="Internal Transfers" name="internal_transfers">
                             <field name="transfer_ids" readonly="1">
@@ -305,8 +315,7 @@
                 />
                 <field name="activity_ids" widget="list_activity" optional="show" />
                 <field name="origin" />
-                <field name="currency_id" column_invisible="1" />
-                <field name="estimated_cost" optional="hide" />
+                <field name="project_id" optional="show" />
                 <field
                     name="state"
                     widget="badge"
@@ -395,6 +404,7 @@
                 <field name="requested_by" />
                 <field name="assigned_to" />
                 <field name="picking_type_id" />
+                <field name="project_id" />
                 <group expand="0" string="Group By...">
                     <filter
                         name="requested_by"
@@ -409,6 +419,13 @@
                         icon="fa-user"
                         domain="[]"
                         context="{'group_by':'assigned_to'}"
+                    />
+                    <filter
+                        name="project"
+                        string="Project"
+                        icon="fa-folder"
+                        domain="[]"
+                        context="{'group_by':'project_id'}"
                     />
                     <filter
                         name="source"
@@ -435,10 +452,8 @@
             <kanban class="o_kanban_mobile" quick_create="false">
                 <field name="name" />
                 <field name="requested_by" readonly="1" />
-                <field name="estimated_cost" />
                 <field name="state" />
                 <field name="date_start" />
-                <field name="currency_id" readonly="1" />
                 <field name="activity_state" />
                 <progressbar
                     field="activity_state"
@@ -448,11 +463,6 @@
                     <t t-name="card">
                         <div class="d-flex align-items-baseline">
                             <field name="requested_by" class="fw-bolder fs-5 me-2" />
-                            <field
-                                name="estimated_cost"
-                                widget="monetary"
-                                class="fw-bolder ms-auto flex-shrink-0"
-                            />
                         </div>
                         <footer class="align-items-end">
                             <div class="d-flex flex-wrap gap-1 text-nowrap">
@@ -532,21 +542,21 @@
         name="Purchase Requests"
         sequence="22"
         web_icon="purchase_request,static/description/icon.png"
-        groups="group_purchase_request_viewer,group_purchase_request_user,group_purchase_request_manager,group_purchase_request_administrator"
+        groups="group_purchase_request_viewer,group_purchase_request_user,group_purchase_request_manager,group_purchase_request_administrator,group_purchase_request_officer"
     />
     <menuitem
         id="menu_purchase_request"
         name="Purchase Requests"
         parent="parent_menu_purchase_request"
-        groups="group_purchase_request_viewer,group_purchase_request_user,group_purchase_request_manager,group_purchase_request_administrator"
+        groups="group_purchase_request_viewer,group_purchase_request_user,group_purchase_request_manager,group_purchase_request_administrator,group_purchase_request_officer"
     />
-    <!-- Menu for managers/administrators - no default filter -->
+    <!-- Menu for managers/administrators/officers - no default filter -->
     <menuitem
         id="menu_purchase_request_act_manager"
         sequence="10"
         parent="menu_purchase_request"
         action="purchase_request_form_action_manager"
-        groups="group_purchase_request_manager,group_purchase_request_administrator"
+        groups="group_purchase_request_manager,group_purchase_request_administrator,group_purchase_request_officer"
     />
     <!-- Menu for regular users - "My Requests" default filter -->
     <menuitem

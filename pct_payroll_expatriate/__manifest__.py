@@ -17,7 +17,7 @@
         - Daily cron for expiry recalculation
         - Restricted to Expatriate Payroll Manager access group
     """,
-    'author': 'Packetclouds Technology',
+    'author': 'Carlson Oranu',
     'website': 'https://www.packetclouds.com',
     'depends': [
         'base',
@@ -26,6 +26,7 @@
         'hr_payroll',
         'mail',
         'product',
+        'fleet',
     ],
     'data': [
         'security/security.xml',

@@ -38,6 +38,12 @@
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]" />
         <field name="category_id" ref="module_category_purchase_request" />
     </record>
+    <!-- Purchase Officer - Can create PRs, create RFQ, see all PRs, mark as done -->
+    <record id="group_purchase_request_officer" model="res.groups">
+        <field name="name">Purchase Officer</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]" />
+        <field name="category_id" ref="module_category_purchase_request" />
+    </record>
     <record model="ir.rule" id="purchase_request_comp_rule">
         <field name="name">Purchase Request multi-company</field>
         <field name="model_id" ref="model_purchase_request" />
@@ -63,7 +69,7 @@
         <field name="perm_write" eval="False" />
         <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="False" />
-        <field name="domain_force">[('picking_type_id.warehouse_id.storekeeper_id', '=', user.id)]</field>
+        <field name="domain_force">[('picking_type_id.warehouse_id.storekeeper_id.user_id', '=', user.id)]</field>
     </record>
     <record id="purchase_request_line_viewer_rule" model="ir.rule">
         <field name="name">Purchase Request Line Storekeeper (View Only)</field>
@@ -73,24 +79,9 @@
         <field name="perm_write" eval="False" />
         <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="False" />
-        <field name="domain_force">[('request_id.picking_type_id.warehouse_id.storekeeper_id', '=', user.id)]</field>
+        <field name="domain_force">[('request_id.picking_type_id.warehouse_id.storekeeper_id.user_id', '=', user.id)]</field>
     </record>
-    <!-- Project Manager Rules - restricted to assigned warehouses -->
-    <record id="purchase_request_followers_rule" model="ir.rule">
-        <field name="name">Follow Purchase Request</field>
-        <field name="model_id" ref="model_purchase_request" />
-        <field name="groups" eval="[(6,0, [ref('group_purchase_request_user')])]" />
-        <field name="perm_read" eval="True" />
-        <field name="perm_write" eval="False" />
-        <field name="perm_create" eval="False" />
-        <field name="perm_unlink" eval="False" />
-        <field name="domain_force">
-            ['|', '|',
-                ('requested_by','=',user.id),
-                ('message_partner_ids', 'in', [user.partner_id.id]),
-                ('picking_type_id.warehouse_id.project_manager_id', '=', user.id)]
-        </field>
-    </record>
+    <!-- Project Manager Rules - can only see/edit own PRs -->
     <record id="purchase_request_rule" model="ir.rule">
         <field name="name">Purchase Request Project Manager</field>
         <field name="model_id" ref="model_purchase_request" />
@@ -98,10 +89,19 @@
         <field name="perm_read" eval="True" />
         <field name="perm_write" eval="True" />
         <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">[('requested_by','=',user.id)]</field>
+    </record>
+    <!-- Project Manager can only delete draft PRs -->
+    <record id="purchase_request_delete_rule" model="ir.rule">
+        <field name="name">Purchase Request Project Manager Delete Draft</field>
+        <field name="model_id" ref="model_purchase_request" />
+        <field name="groups" eval="[(6,0, [ref('group_purchase_request_user')])]" />
+        <field name="perm_read" eval="False" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="True" />
-        <field name="domain_force">['|',
-            ('requested_by','=',user.id),
-            ('picking_type_id.warehouse_id.project_manager_id', '=', user.id)]</field>
+        <field name="domain_force">[('requested_by','=',user.id), ('state', '=', 'draft')]</field>
     </record>
     <!-- Warehouse Manager Rules - can read/write all but cannot create -->
     <record id="purchase_request_manager_rule" model="ir.rule">
@@ -123,22 +123,7 @@
         <field name="perm_create" eval="True" />
         <field name="perm_unlink" eval="True" />
     </record>
-    <!-- Purchase Request Line Rules - restricted to assigned warehouses -->
-    <record id="purchase_request_line_followers_rule" model="ir.rule">
-        <field name="name">Follow Purchase Request Line</field>
-        <field name="model_id" ref="model_purchase_request_line" />
-        <field name="groups" eval="[(6,0, [ref('group_purchase_request_user')])]" />
-        <field name="perm_read" eval="True" />
-        <field name="perm_write" eval="False" />
-        <field name="perm_create" eval="False" />
-        <field name="perm_unlink" eval="False" />
-        <field name="domain_force">
-            ['|', '|',
-                ('request_id.requested_by','=',user.id),
-                ('request_id.message_partner_ids', 'in', [user.partner_id.id]),
-                ('request_id.picking_type_id.warehouse_id.project_manager_id', '=', user.id)]
-        </field>
-    </record>
+    <!-- Purchase Request Line Rules - can only see/edit own PR lines -->
     <record id="purchase_request_line_rule" model="ir.rule">
         <field name="name">Purchase Request Line Project Manager</field>
         <field name="model_id" ref="model_purchase_request_line" />
@@ -146,10 +131,19 @@
         <field name="perm_read" eval="True" />
         <field name="perm_write" eval="True" />
         <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">[('request_id.requested_by','=',user.id)]</field>
+    </record>
+    <!-- Project Manager can only delete lines from draft PRs -->
+    <record id="purchase_request_line_delete_rule" model="ir.rule">
+        <field name="name">Purchase Request Line Project Manager Delete Draft</field>
+        <field name="model_id" ref="model_purchase_request_line" />
+        <field name="groups" eval="[(6,0, [ref('group_purchase_request_user')])]" />
+        <field name="perm_read" eval="False" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="True" />
-        <field name="domain_force">['|',
-            ('request_id.requested_by','=',user.id),
-            ('request_id.picking_type_id.warehouse_id.project_manager_id', '=', user.id)]</field>
+        <field name="domain_force">[('request_id.requested_by','=',user.id), ('request_id.state', '=', 'draft')]</field>
     </record>
     <!-- Warehouse Manager Line Rules - can read/write all but cannot create -->
     <record id="purchase_request_line_manager_rule" model="ir.rule">
@@ -171,6 +165,25 @@
         <field name="perm_create" eval="True" />
         <field name="perm_unlink" eval="True" />
     </record>
+    <!-- Purchase Officer Rules - can see all PRs, create, edit/delete (before approval) -->
+    <record id="purchase_request_officer_rule" model="ir.rule">
+        <field name="name">Purchase Request Officer</field>
+        <field name="model_id" ref="model_purchase_request" />
+        <field name="groups" eval="[(6,0, [ref('group_purchase_request_officer')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+    </record>
+    <record id="purchase_request_line_officer_rule" model="ir.rule">
+        <field name="name">Purchase Request Line Officer</field>
+        <field name="model_id" ref="model_purchase_request_line" />
+        <field name="groups" eval="[(6,0, [ref('group_purchase_request_officer')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+    </record>
     <!-- Storekeeper Stock Rules - restrict to assigned warehouses -->
     <record id="storekeeper_warehouse_rule" model="ir.rule">
         <field name="name">Storekeeper - Warehouse Access</field>
@@ -180,7 +193,7 @@
         <field name="perm_write" eval="False" />
         <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="False" />
-        <field name="domain_force">[('storekeeper_id', '=', user.id)]</field>
+        <field name="domain_force">[('storekeeper_id.user_id', '=', user.id)]</field>
     </record>
     <record id="storekeeper_location_rule" model="ir.rule">
         <field name="name">Storekeeper - Location Access</field>
@@ -190,7 +203,7 @@
         <field name="perm_write" eval="False" />
         <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="False" />
-        <field name="domain_force">[('warehouse_id.storekeeper_id', '=', user.id)]</field>
+        <field name="domain_force">[('warehouse_id.storekeeper_id.user_id', '=', user.id)]</field>
     </record>
     <record id="storekeeper_quant_rule" model="ir.rule">
         <field name="name">Storekeeper - Stock Quant Access</field>
@@ -200,7 +213,7 @@
         <field name="perm_write" eval="False" />
         <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="False" />
-        <field name="domain_force">[('location_id.warehouse_id.storekeeper_id', '=', user.id)]</field>
+        <field name="domain_force">[('location_id.warehouse_id.storekeeper_id.user_id', '=', user.id)]</field>
     </record>
     <record id="storekeeper_picking_rule" model="ir.rule">
         <field name="name">Storekeeper - Picking Access</field>
@@ -211,8 +224,8 @@
         <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="False" />
         <field name="domain_force">['|',
-            ('location_id.warehouse_id.storekeeper_id', '=', user.id),
-            ('location_dest_id.warehouse_id.storekeeper_id', '=', user.id)]</field>
+            ('location_id.warehouse_id.storekeeper_id.user_id', '=', user.id),
+            ('location_dest_id.warehouse_id.storekeeper_id.user_id', '=', user.id)]</field>
     </record>
     <record id="storekeeper_move_rule" model="ir.rule">
         <field name="name">Storekeeper - Stock Move Access</field>
@@ -223,8 +236,8 @@
         <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="False" />
         <field name="domain_force">['|',
-            ('location_id.warehouse_id.storekeeper_id', '=', user.id),
-            ('location_dest_id.warehouse_id.storekeeper_id', '=', user.id)]</field>
+            ('location_id.warehouse_id.storekeeper_id.user_id', '=', user.id),
+            ('location_dest_id.warehouse_id.storekeeper_id.user_id', '=', user.id)]</field>
     </record>
     <record id="storekeeper_picking_type_rule" model="ir.rule">
         <field name="name">Storekeeper - Picking Type Access</field>
@@ -234,6 +247,62 @@
         <field name="perm_write" eval="False" />
         <field name="perm_create" eval="False" />
         <field name="perm_unlink" eval="False" />
-        <field name="domain_force">[('warehouse_id.storekeeper_id', '=', user.id)]</field>
+        <field name="domain_force">[('warehouse_id.storekeeper_id.user_id', '=', user.id)]</field>
+    </record>
+    <!-- Project Access Rules -->
+    <!-- Storekeeper - Only projects linked to warehouses where they are assigned -->
+    <record id="storekeeper_project_rule" model="ir.rule">
+        <field name="name">Storekeeper - Project Access</field>
+        <field name="model_id" ref="project.model_project_project" />
+        <field name="groups" eval="[(6,0, [ref('group_purchase_request_viewer')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">[('id', 'in', user.env['stock.warehouse'].sudo().search([('storekeeper_id.user_id', '=', user.id)]).mapped('project_id').ids)]</field>
+    </record>
+    <!-- Project Manager - Only projects linked to warehouses where they are assigned -->
+    <record id="project_manager_project_rule" model="ir.rule">
+        <field name="name">Project Manager - Project Access</field>
+        <field name="model_id" ref="project.model_project_project" />
+        <field name="groups" eval="[(6,0, [ref('group_purchase_request_user')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">[('id', 'in', user.env['stock.warehouse'].sudo().search([('project_manager_id', '=', user.id)]).mapped('project_id').ids)]</field>
+    </record>
+    <!-- Warehouse Manager - Full read access to all projects -->
+    <record id="warehouse_manager_project_rule" model="ir.rule">
+        <field name="name">Warehouse Manager - Project Access</field>
+        <field name="model_id" ref="project.model_project_project" />
+        <field name="groups" eval="[(6,0, [ref('group_purchase_request_manager')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+    <!-- PR Administrator - Full access to all projects -->
+    <record id="pr_administrator_project_rule" model="ir.rule">
+        <field name="name">PR Administrator - Project Access</field>
+        <field name="model_id" ref="project.model_project_project" />
+        <field name="groups" eval="[(6,0, [ref('group_purchase_request_administrator')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+    <!-- Purchase Officer - Full access to all projects -->
+    <record id="purchase_officer_project_rule" model="ir.rule">
+        <field name="name">Purchase Officer - Project Access</field>
+        <field name="model_id" ref="project.model_project_project" />
+        <field name="groups" eval="[(6,0, [ref('group_purchase_request_officer')])]" />
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+        <field name="domain_force">[(1, '=', 1)]</field>
     </record>
 </odoo>

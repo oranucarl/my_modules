@@ -80,6 +80,9 @@
             <search string="Expatriate Housing">
                 <field name="employee_id"/>
                 <field name="location"/>
+                <!-- Expatriate filter for employees who are expatriates -->
+                <filter string="Expatriate" name="filter_expatriate" domain="[('employee_id.category_ids.is_expatriate', '=', True)]"/>
+                <separator/>
                 <filter string="Expired" name="filter_expired" domain="[('alert_status', '=', 'expired')]"/>
                 <filter string="Urgent" name="filter_urgent" domain="[('alert_status', '=', 'urgent')]"/>
                 <filter string="Due Soon" name="filter_due_soon" domain="[('alert_status', '=', 'due_soon')]"/>
@@ -92,11 +95,51 @@
         </field>
     </record>
 
-    <!-- Housing Action -->
+    <!-- Housing Action for Expatriate Management (with default expatriate filter) -->
     <record id="action_expatriate_housing" model="ir.actions.act_window">
+        <field name="name">Expatriate Housing</field>
+        <field name="res_model">expatriate.housing</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_expatriate': 1}</field>
+    </record>
+
+    <!-- ================================================== -->
+    <!-- FLEET HOUSING (General - All Employees)            -->
+    <!-- ================================================== -->
+
+    <!-- Inherited Form View for Fleet Housing - removes expatriate domain -->
+    <record id="view_fleet_housing_form" model="ir.ui.view">
+        <field name="name">expatriate.housing.form.fleet</field>
+        <field name="model">expatriate.housing</field>
+        <field name="inherit_id" ref="view_expatriate_housing_form"/>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <field name="employee_id" position="attributes">
+                <attribute name="domain">[]</attribute>
+            </field>
+        </field>
+    </record>
+
+    <!-- Housing Action for Fleet Module (all employees, no domain) -->
+    <record id="action_fleet_housing" model="ir.actions.act_window">
         <field name="name">Housing</field>
         <field name="res_model">expatriate.housing</field>
         <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_expatriate_housing_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_fleet_housing_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new housing record
+            </p>
+        </field>
     </record>
+
+    <!-- Housing Menu under Fleet module (between Fleet and Reporting) -->
+    <menuitem id="menu_fleet_housing"
+              name="Housing"
+              parent="fleet.menu_root"
+              action="action_fleet_housing"
+              sequence="50"/>
 
 </odoo>

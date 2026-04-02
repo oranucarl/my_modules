@@ -24,8 +24,7 @@
                 <field name="requested_by" widget="many2one_avatar_user" />
                 <field name="assigned_to" widget="many2one_avatar_user" />
                 <field name="date_required" />
-                <field name="estimated_cost" widget="monetary" />
-                <field name="currency_id" column_invisible="1" />
+                <field name="technical_description_text" string="Technical Description" optional="show" />
                 <field name="purchased_qty" />
                 <field name="qty_in_transfer" optional="hide" />
                 <field name="unfulfilled_qty" optional="hide" />
@@ -46,7 +45,8 @@
                 <field
                     name="analytic_distribution"
                     widget="analytic_distribution"
-                    optional="hide"
+                    optional="show"
+                    required="1"
                     groups="analytic.group_analytic_accounting"
                     options="{'product_field': 'product_id', 'business_domain': 'purchase_order'}"
                 />
@@ -121,28 +121,14 @@
                                 widget="analytic_distribution"
                                 groups="analytic.group_analytic_accounting"
                                 options="{'product_field': 'product_id', 'business_domain': 'purchase_order'}"
+                                required="1"
                             />
                             <field
                                 name="date_required"
                                 readonly="is_editable == False"
                             />
-                            <field
-                                name="estimated_cost"
-                                widget="monetary"
-                                readonly="request_state in ('draft', 'to_approve', 'on_hold')"
-                            />
-                            <field name="currency_id" invisible="1" />
                             <field name="cancelled" />
                         </group>
-                    </group>
-                    <group name="specifications">
-                        <separator string="Specifications" />
-                        <newline />
-                        <field
-                            name="specifications"
-                            nolabel="1"
-                            readonly="is_editable == False"
-                        />
                     </group>
                     <group name="technical_description">
                         <separator string="Technical Description" />
@@ -473,6 +459,7 @@
                                 groups="analytic.group_analytic_accounting"
                                 options="{'product_field': 'product_id', 'business_domain': 'purchase_order'}"
                                 colspan="4"
+                                required="1"
                             />
                         </group>
                     </group>
@@ -572,29 +559,15 @@
                                 groups="analytic.group_analytic_accounting"
                                 options="{'product_field': 'product_id', 'business_domain': 'purchase_order'}"
                                 readonly="is_editable == False"
+                                required="1"
                             />
                             <field
                                 name="date_required"
                                 readonly="is_editable == False"
                             />
-                            <field
-                                name="estimated_cost"
-                                widget="monetary"
-                                readonly="request_state in ('draft', 'to_approve', 'on_hold')"
-                            />
-                            <field name="currency_id" invisible="1" />
                             <field name="request_state" invisible="1" />
                             <field name="cancelled" widget="boolean" />
                         </group>
-                    </group>
-                    <group name="specifications">
-                        <separator string="Specifications" />
-                        <newline />
-                        <field
-                            name="specifications"
-                            nolabel="1"
-                            readonly="is_editable == False"
-                        />
                     </group>
                     <group name="technical_description">
                         <separator string="Technical Description" />

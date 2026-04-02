@@ -449,6 +449,65 @@ class PctPettyCashExpense(models.Model):
     _order = 'expense_date desc, id desc'
     _inherit = 'analytic.mixin'
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to send OdooBot notifications to Accountants and Managers"""
+        records = super().create(vals_list)
+        records._notify_accountants_and_managers()
+        return records
+
+    def _notify_accountants_and_managers(self):
+        """Send OdooBot desktop notification to Petty Cash Accountants and Managers"""
+        # Check if notification is enabled in settings (default: True)
+        notification_enabled = self.env['ir.config_parameter'].sudo().get_param(
+            'pct_petty_cash.expense_notification', 'True'
+        )
+        if notification_enabled in ('False', '0', False):
+            return
+
+        # Get OdooBot user and partner
+        odoobot_user = self.env.ref('base.user_root', raise_if_not_found=False)
+        if not odoobot_user:
+            return
+
+        # Get users in Accountant group (Managers inherit from Accountant, so they're included)
+        accountant_group = self.env.ref(
+            'pct_petty_cash.group_petty_cash_accountant', raise_if_not_found=False
+        )
+        if not accountant_group:
+            return
+
+        current_user_id = self.env.user.id
+        users_to_notify = self.env['res.users'].search([
+            ('groups_id', 'in', accountant_group.id),
+            ('active', '=', True),
+            ('id', '!=', current_user_id),  # Exclude the user creating the expense
+        ])
+
+        if not users_to_notify:
+            return
+
+        for expense in self:
+            custodian_name = expense.petty_cash_id.custodian_id.name
+            message_body = _(
+                "New expense submitted by %(custodian)s: %(description)s (%(amount)s)",
+                custodian=custodian_name,
+                description=expense.description,
+                amount=expense.amount,
+            )
+
+            for user in users_to_notify:
+                # Get or create direct message channel between OdooBot and the user
+                channel = self.env['discuss.channel'].with_user(odoobot_user).channel_get(
+                    [user.partner_id.id]
+                )
+                if channel:
+                    channel.with_user(odoobot_user).message_post(
+                        body=message_body,
+                        message_type='comment',
+                        subtype_xmlid='mail.mt_comment',
+                    )
+
     # Analytic plan IDs for project and project stage validation
     PROJECT_PLAN_ID = 1
     PROJECT_STAGE_PLAN_ID = 2

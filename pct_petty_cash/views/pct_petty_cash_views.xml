@@ -37,7 +37,7 @@
                                    groups="!pct_petty_cash.group_petty_cash_accountant"/>
                             <field name="analytic_distribution" widget="analytic_distribution"
                                    groups="analytic.group_analytic_accounting"
-                                   readonly="state == 'posted'"/>
+                                   readonly="state == 'posted'" required="1"/>
                             <field name="move_id" readonly="1"/>
                         </group>
                     </group>
@@ -124,7 +124,7 @@
                                     <field name="source_account_id" readonly="1"/>
                                     <field name="analytic_distribution" widget="analytic_distribution"
                                            groups="analytic.group_analytic_accounting"
-                                           optional="show" readonly="state == 'posted'"/>
+                                           optional="show" readonly="state == 'posted'" required="1"/>
                                     <field name="move_id" readonly="1" optional="show"/>
                                     <field name="state" widget="badge"
                                            decoration-success="state == 'posted'"
@@ -150,7 +150,7 @@
                                     <field name="source_account_id" readonly="1"/>
                                     <field name="analytic_distribution" widget="analytic_distribution"
                                            groups="analytic.group_analytic_accounting"
-                                           optional="show" readonly="state == 'posted'"/>
+                                           optional="show" readonly="state == 'posted'" required="1"/>
                                     <field name="move_id" readonly="1" optional="show"/>
                                     <field name="state" widget="badge"
                                            decoration-success="state == 'posted'"
@@ -172,7 +172,7 @@
                                     <field name="account_id" readonly="state == 'posted'"/>
                                     <field name="analytic_distribution" widget="analytic_distribution"
                                            groups="analytic.group_analytic_accounting"
-                                           optional="show" readonly="state == 'posted'"/>
+                                           optional="show" readonly="state == 'posted'" required="1"/>
                                     <field name="move_id" readonly="1" optional="show"/>
                                     <field name="state" widget="badge"
                                            decoration-success="state == 'posted'"
@@ -201,7 +201,7 @@
                                     <field name="account_id" readonly="1"/>
                                     <field name="analytic_distribution" widget="analytic_distribution"
                                            groups="analytic.group_analytic_accounting"
-                                           optional="show" readonly="state == 'posted'"/>
+                                           optional="show" readonly="state == 'posted'" required="1"/>
                                     <field name="move_id" readonly="1" optional="show"/>
                                     <field name="state" widget="badge"
                                            decoration-success="state == 'posted'"

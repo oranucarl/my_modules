@@ -39,9 +39,9 @@
                                 <span t-field="o.assigned_to" />
                             </div>
                             <div class="col-2">
-                                <strong>Picking Type:</strong>
+                                <strong>Project:</strong>
                                 <br />
-                                <span t-field="o.picking_type_id" />
+                                <span t-field="o.project_id" />
                             </div>
                         </div>
                         <div class="row mt32 mb32">
@@ -68,14 +68,11 @@
                                         <th class="text-center" groups="uom.group_uom">
                                             <strong>Product UoM</strong>
                                         </th>
-                                        <th>
-                                            <strong>Estimated Cost</strong>
-                                        </th>
                                         <th class="text-right">
                                             <strong>Requested Date</strong>
                                         </th>
                                         <th>
-                                            <strong>Specifications</strong>
+                                            <strong>Technical Description</strong>
                                         </th>
                                     </tr>
                                 </thead>
@@ -85,9 +82,15 @@
                                             <span t-field="line_id.name" />
                                         </td>
                                         <td groups="analytic.group_analytic_accounting">
-                                            <span
-                                                t-field="line_id.analytic_distribution"
-                                            />
+                                            <t t-if="line_id.analytic_distribution">
+                                                <t t-foreach="line_id.analytic_distribution.items()" t-as="dist">
+                                                    <t t-set="account_ids" t-value="[int(x.strip()) for x in str(dist[0]).split(',') if x.strip().isdigit()]"/>
+                                                    <t t-set="accounts" t-value="env['account.analytic.account'].browse(account_ids)"/>
+                                                    <span t-esc="', '.join(accounts.mapped('name'))"/>
+                                                    <span t-esc="' (' + str(dist[1]) + '%)'"/>
+                                                    <br t-if="not dist_last"/>
+                                                </t>
+                                            </t>
                                         </td>
                                         <td class="text-right">
                                             <span t-field="line_id.product_qty" />
@@ -102,14 +105,11 @@
                                                 />
                                             </td>
                                         </t>
-                                        <td>
-                                            <span t-field="line_id.estimated_cost" />
-                                        </td>
                                         <td class="text-right">
                                             <span t-field="line_id.date_required" />
                                         </td>
                                         <td>
-                                            <span t-field="line_id.specifications" />
+                                            <t t-out="line_id.technical_description"/>
                                         </td>
                                     </tr>
                                 </tbody>

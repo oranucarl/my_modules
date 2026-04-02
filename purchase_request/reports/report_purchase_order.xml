@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018-2019 ForgeFlow, S.L.
+     License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl-3.0) -->
+<odoo>
+    <!-- Inherit Purchase Order PDF Report to add Storekeeper Contact Info -->
+    <template id="report_purchaseorder_document_inherit" inherit_id="purchase_stock.report_purchaseorder_document">
+        <!-- Add Contact Person after the warehouse partner address -->
+        <xpath expr="//div[@t-field='o.picking_type_id.warehouse_id.partner_id']" position="after">
+            <t t-if="o.picking_type_id.warehouse_id.storekeeper_id">
+                <div class="mt-2" name="storekeeper_contact">
+                    <strong>Contact Person: </strong>
+                    <span t-field="o.picking_type_id.warehouse_id.storekeeper_id.name"/>
+                    <br/>
+                    <t t-if="o.picking_type_id.warehouse_id.storekeeper_id.work_phone">
+                        <strong>Phone: </strong>
+                        <span t-field="o.picking_type_id.warehouse_id.storekeeper_id.work_phone"/>
+                    </t>
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>

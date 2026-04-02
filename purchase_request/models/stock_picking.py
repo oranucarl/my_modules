@@ -66,22 +66,24 @@ class StockPicking(models.Model):
                     "destination",
                 )
 
-    def _send_notification_email(self, template, user, location_type):
-        """Send notification email to a warehouse manager."""
-        if not user.email:
+    def _send_notification_email(self, template, employee, location_type):
+        """Send notification email to a storekeeper (employee)."""
+        # Get email from employee's work email or linked user
+        email = employee.work_email or (employee.user_id and employee.user_id.email)
+        if not email:
             return
 
         # Use context to pass additional info to the template
         ctx = {
-            "recipient_name": user.name,
-            "recipient_email": user.email,
+            "recipient_name": employee.name,
+            "recipient_email": email,
             "location_type": location_type,
             "picking_type_name": self.picking_type_id.name,
         }
         template.with_context(**ctx).send_mail(
             self.id,
             force_send=False,
-            email_values={"email_to": user.email},
+            email_values={"email_to": email},
         )
 
     def _check_storekeeper_validation(self):
@@ -117,7 +119,7 @@ class StockPicking(models.Model):
 
         # For Storekeepers, check if they are the destination storekeeper
         dest_warehouse = self.location_dest_id.warehouse_id
-        if dest_warehouse and dest_warehouse.storekeeper_id == user:
+        if dest_warehouse and dest_warehouse.storekeeper_id and dest_warehouse.storekeeper_id.user_id == user:
             return True
 
         # Storekeeper is not the destination storekeeper

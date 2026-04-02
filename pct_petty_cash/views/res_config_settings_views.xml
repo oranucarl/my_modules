@@ -22,6 +22,9 @@
                         <setting string="Accounting Team Email" help="Email address to notify when allocations or expenses are created">
                             <field name="petty_cash_notification_email" placeholder="e.g. accounting@company.com"/>
                         </setting>
+                        <setting string="Expense Submission Notifications" help="Send OdooBot notifications to Accountants and Managers when expenses are submitted">
+                            <field name="petty_cash_expense_notification"/>
+                        </setting>
                     </block>
                 </app>
             </xpath>

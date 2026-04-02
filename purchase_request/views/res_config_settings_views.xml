@@ -21,6 +21,18 @@
                             </div>
                         </div>
                     </setting>
+                    <setting
+                        id="purchase_request_auto_activity_setting"
+                        string="Auto-create RFQ Activities"
+                        help="When enabled, activities will be created for all Purchase Officers when a Purchase Request is approved."
+                    >
+                        <div class="content-group">
+                            <div class="row">
+                                <field name="purchase_request_auto_activity" />
+                                <span class="ms-2">Create activities for Purchase Officers on PR approval</span>
+                            </div>
+                        </div>
+                    </setting>
                 </block>
             </xpath>
         </field>

@@ -4,7 +4,53 @@
 from datetime import timedelta
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+
+# Analytic plan IDs for project and project stage validation
+PROJECT_PLAN_ID = 1
+PROJECT_STAGE_PLAN_ID = 2
+
+
+def replace_project_analytic(env, existing_distribution, new_project_account_id):
+    """Replace the project analytic account in a distribution, keeping other plans.
+
+    Args:
+        env: Odoo environment
+        existing_distribution: Current analytic distribution dict (or None)
+        new_project_account_id: ID of the new project's analytic account
+
+    Returns:
+        Updated analytic distribution dict
+    """
+    if not existing_distribution:
+        return {str(new_project_account_id): 100}
+
+    new_distribution = {}
+
+    # Process existing distribution - remove old project plan accounts, keep others
+    for key, percentage in existing_distribution.items():
+        # Keys can be single IDs or comma-separated IDs
+        account_ids = [int(aid.strip()) for aid in str(key).split(',') if aid.strip().isdigit()]
+
+        # Check if any of these accounts belong to the Project plan (id=1)
+        accounts = env['account.analytic.account'].browse(account_ids)
+        non_project_accounts = accounts.filtered(lambda a: a.plan_id.id != PROJECT_PLAN_ID)
+
+        if non_project_accounts:
+            # Keep the non-project accounts with their percentage
+            if len(non_project_accounts) == len(accounts):
+                # All accounts are non-project, keep the key as-is
+                new_distribution[key] = percentage
+            else:
+                # Some accounts were project accounts, rebuild key with only non-project ones
+                new_key = ','.join(str(a.id) for a in non_project_accounts)
+                new_distribution[new_key] = percentage
+
+    # Add the new project analytic account
+    new_distribution[str(new_project_account_id)] = 100
+
+    return new_distribution
+
 
 _STATES = [
     ("draft", "Draft"),
@@ -27,6 +73,41 @@ class PurchaseRequest(models.Model):
     @api.model
     def _company_get(self):
         return self.env["res.company"].browse(self.env.company.id)
+
+    @api.model
+    def default_get(self, fields_list):
+        """Override to include allowed_project_ids for new records."""
+        res = super().default_get(fields_list)
+        if 'allowed_project_ids' in fields_list or not fields_list:
+            # Compute allowed projects for the current user
+            res['allowed_project_ids'] = self._get_allowed_projects().ids
+        return res
+
+    @api.model
+    def _get_allowed_projects(self):
+        """Get allowed projects for the current user based on role and warehouse assignments."""
+        user = self.env.user
+        Warehouse = self.env["stock.warehouse"].sudo()
+
+        has_full_access = (
+            user.has_group("purchase_request.group_purchase_request_manager")
+            or user.has_group("purchase_request.group_purchase_request_administrator")
+            or user.has_group("purchase_request.group_purchase_request_officer")
+        )
+        is_project_manager = user.has_group("purchase_request.group_purchase_request_user")
+
+        if has_full_access:
+            return Warehouse.search([]).mapped("project_id")
+        elif is_project_manager:
+            return Warehouse.search([("project_manager_id", "=", user.id)]).mapped("project_id")
+        else:
+            return Warehouse.search([("storekeeper_id.user_id", "=", user.id)]).mapped("project_id")
+
+    @api.model
+    def _get_default_project(self):
+        """Get default project for the current user (first allowed project)."""
+        allowed_projects = self._get_allowed_projects()
+        return allowed_projects[0] if allowed_projects else False
 
     @api.model
     def _get_can_create(self):
@@ -78,6 +159,13 @@ class PurchaseRequest(models.Model):
                 rec.is_editable = False
             else:
                 rec.is_editable = True
+
+    @api.depends_context('uid')
+    def _compute_allowed_project_ids(self):
+        """Compute allowed projects based on user's role and warehouse assignments."""
+        allowed_projects = self._get_allowed_projects()
+        for rec in self:
+            rec.allowed_project_ids = allowed_projects
 
     name = fields.Char(
         string="Request Reference",
@@ -167,6 +255,20 @@ class PurchaseRequest(models.Model):
         default=_default_picking_type,
         domain="[('code', '=', 'incoming')]",
     )
+    project_id = fields.Many2one(
+        comodel_name="project.project",
+        string="Project",
+        tracking=True,
+        required=True,
+        default=lambda self: self._get_default_project(),
+        help="Project for this purchase request. "
+        "The project's analytic account will be used as default on lines.",
+    )
+    allowed_project_ids = fields.Many2many(
+        comodel_name="project.project",
+        compute="_compute_allowed_project_ids",
+        help="Projects the current user is allowed to select based on their role.",
+    )
     group_id = fields.Many2one(
         comodel_name="procurement.group",
         string="Procurement Group",
@@ -185,11 +287,6 @@ class PurchaseRequest(models.Model):
         string="Purchases count", compute="_compute_purchase_count", readonly=True
     )
     currency_id = fields.Many2one(related="company_id.currency_id", readonly=True)
-    estimated_cost = fields.Monetary(
-        compute="_compute_estimated_cost",
-        string="Total Estimated Cost",
-        store=True,
-    )
     transfer_ids = fields.Many2many(
         comodel_name="stock.picking",
         string="Internal Transfers",
@@ -201,11 +298,6 @@ class PurchaseRequest(models.Model):
         compute="_compute_transfer_count",
         store=True,
     )
-
-    @api.depends("line_ids", "line_ids.estimated_cost")
-    def _compute_estimated_cost(self):
-        for rec in self:
-            rec.estimated_cost = sum(rec.line_ids.mapped("estimated_cost"))
 
     @api.depends(
         "line_ids.purchase_request_allocation_ids.stock_move_id.picking_id"
@@ -401,7 +493,42 @@ class PurchaseRequest(models.Model):
         return self.write({"state": "to_approve"})
 
     def button_approved(self):
-        return self.write({"state": "approved", "assigned_to": self.env.uid})
+        self.write({"state": "approved", "assigned_to": self.env.uid})
+        self._create_rfq_activities()
+        return True
+
+    def _create_rfq_activities(self):
+        """Create activities for all Purchase Officers to create RFQ."""
+        # Check if feature is enabled in settings
+        if not self.env['ir.config_parameter'].sudo().get_param(
+            'purchase_request.auto_activity', False
+        ):
+            return
+
+        # Get all Purchase Officers
+        purchase_officer_group = self.env.ref(
+            'purchase_request.group_purchase_request_officer', raise_if_not_found=False
+        )
+        if not purchase_officer_group:
+            return
+
+        purchase_officers = self.env['res.users'].search([
+            ('groups_id', 'in', purchase_officer_group.id),
+            ('active', '=', True),
+        ])
+
+        if not purchase_officers:
+            return
+
+        # Create activity for each Purchase Officer
+        for pr in self:
+            for officer in purchase_officers:
+                pr.activity_schedule(
+                    'mail.mail_activity_data_todo',
+                    user_id=officer.id,
+                    summary=_("Create RFQ for PR %s") % pr.name,
+                    note=_("Purchase Request %s has been approved. Please create an RFQ.") % pr.name,
+                )
 
     def button_rejected(self):
         self.mapped("line_ids").do_cancel()
@@ -535,12 +662,21 @@ class PurchaseRequest(models.Model):
             if all_fulfilled and pr.line_ids:
                 pr.button_done()
 
-    @api.onchange("picking_type_id")
-    def _onchange_picking_type_id(self):
-        """Set analytic account on PR lines based on project linked to warehouse."""
-        if self.picking_type_id and self.picking_type_id.warehouse_id:
-            warehouse = self.picking_type_id.warehouse_id
-            if warehouse.project_id and warehouse.project_id.account_id:
-                analytic_account = warehouse.project_id.account_id
+    @api.onchange("project_id")
+    def _onchange_project_id(self):
+        """Set picking type from warehouse linked to project, and analytic distribution on lines."""
+        if self.project_id:
+            # Find warehouse linked to this project and set its receipt picking type
+            warehouse = self.env["stock.warehouse"]._get_warehouse_from_project(self.project_id)
+            if warehouse and warehouse.in_type_id:
+                self.picking_type_id = warehouse.in_type_id
+
+            # Set analytic distribution on PR lines
+            if self.project_id.account_id:
                 for line in self.line_ids:
-                    line.analytic_distribution = {str(analytic_account.id): 100.0}
+                    # Replace project analytic, keep other plans (like project stage)
+                    line.analytic_distribution = replace_project_analytic(
+                        self.env,
+                        line.analytic_distribution,
+                        self.project_id.account_id.id
+                    )

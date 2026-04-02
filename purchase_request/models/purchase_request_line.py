@@ -2,7 +2,56 @@
 # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl-3.0)
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+
+# Analytic plan IDs for project and project stage validation
+PROJECT_PLAN_ID = 1
+PROJECT_STAGE_PLAN_ID = 2
+
+
+def validate_analytic_distribution(env, analytic_distribution, record_name="record"):
+    """Validate analytic distribution has both project and project stage.
+
+    Args:
+        env: Odoo environment
+        analytic_distribution: The analytic distribution dict to validate
+        record_name: Name to use in error messages
+
+    Raises:
+        ValidationError if validation fails
+    """
+    if not analytic_distribution:
+        raise ValidationError(_('Analytic distribution is required on %s.') % record_name)
+
+    # Get analytic accounts from distribution
+    # Keys can be single IDs or comma-separated IDs (e.g., '242' or '242,410')
+    analytic_account_ids = set()
+    for key in analytic_distribution.keys():
+        for aid in str(key).split(','):
+            try:
+                analytic_account_ids.add(int(aid.strip()))
+            except ValueError:
+                continue
+
+    if not analytic_account_ids:
+        raise ValidationError(_('Analytic distribution is required on %s.') % record_name)
+
+    # Check for project and project stage analytic accounts
+    analytic_accounts = env['account.analytic.account'].browse(list(analytic_account_ids))
+
+    has_project = False
+    has_project_stage = False
+
+    for account in analytic_accounts:
+        if account.plan_id.id == PROJECT_PLAN_ID:
+            has_project = True
+        if account.plan_id.id == PROJECT_STAGE_PLAN_ID:
+            has_project_stage = True
+
+    if not has_project:
+        raise ValidationError(_('Please select a Project in the analytic distribution on %s.') % record_name)
+    if not has_project_stage:
+        raise ValidationError(_('Please select a Project Stage in the analytic distribution on %s.') % record_name)
 
 _STATES = [
     ("draft", "Draft"),
@@ -76,12 +125,30 @@ class PurchaseRequestLine(models.Model):
         default=fields.Date.context_today,
     )
     is_editable = fields.Boolean(compute="_compute_is_editable", readonly=True)
-    specifications = fields.Text()
     technical_description = fields.Html(
         string="Technical Description",
         sanitize=True,
         sanitize_overridable=False,
     )
+    technical_description_text = fields.Char(
+        string="Technical Description",
+        compute="_compute_technical_description_text",
+        store=True,
+    )
+
+    @api.depends("technical_description")
+    def _compute_technical_description_text(self):
+        """Convert HTML to plain text for list view display."""
+        import re
+        for line in self:
+            if line.technical_description:
+                # Strip HTML tags for plain text display
+                text = re.sub(r'<[^>]+>', '', line.technical_description)
+                # Clean up whitespace
+                text = ' '.join(text.split())
+                line.technical_description_text = text[:100] + '...' if len(text) > 100 else text
+            else:
+                line.technical_description_text = False
     request_state = fields.Selection(
         string="Request state",
         related="request_id.state",
@@ -167,11 +234,6 @@ class PurchaseRequestLine(models.Model):
         string="Pending Qty to Receive",
         store=True,
     )
-    estimated_cost = fields.Monetary(
-        currency_field="currency_id",
-        default=0.0,
-        help="Estimated cost of Purchase Request Line, not propagated to PO.",
-    )
     currency_id = fields.Many2one(related="company_id.currency_id", readonly=True)
     product_id = fields.Many2one(
         comodel_name="product.product",
@@ -211,7 +273,12 @@ class PurchaseRequestLine(models.Model):
         "purchase_request_allocation_ids.requested_product_uom_qty",
     )
     def _compute_transfer_qty(self):
-        """Compute quantity currently in draft/confirmed internal transfers."""
+        """Compute quantity committed in internal transfers (draft, confirmed, or done).
+
+        Only cancelled transfers are excluded. This ensures that:
+        - Quantities remain counted after transfer validation
+        - unfulfilled_qty stays reduced after transfers are completed
+        """
         for rec in self:
             transfer_qty = 0.0
             for allocation in rec.purchase_request_allocation_ids:
@@ -220,7 +287,7 @@ class PurchaseRequestLine(models.Model):
                     move
                     and move.picking_id
                     and move.picking_id.picking_type_id.code == "internal"
-                    and move.state not in ("done", "cancel")
+                    and move.state != "cancel"
                 ):
                     transfer_qty += allocation.requested_product_uom_qty
             rec.qty_in_transfer = transfer_qty
@@ -347,6 +414,39 @@ class PurchaseRequestLine(models.Model):
             self.product_uom_id = self.product_id.uom_id.id
             self.product_qty = 1
             self.name = name
+            # Auto-fill analytic distribution from request's project
+            if (
+                self.request_id
+                and self.request_id.project_id
+                and self.request_id.project_id.account_id
+                and not self.analytic_distribution
+            ):
+                self.analytic_distribution = self.request_id.project_id._get_analytic_distribution()
+
+    @api.constrains("analytic_distribution")
+    def _check_analytic_distribution(self):
+        """Validate analytic distribution has project and project stage."""
+        for line in self:
+            if line.analytic_distribution:
+                validate_analytic_distribution(
+                    self.env,
+                    line.analytic_distribution,
+                    _("Purchase Request Line '%s'") % (line.name or line.product_id.name or 'Unknown')
+                )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Auto-fill analytic distribution from request's project on line creation."""
+        lines = super().create(vals_list)
+        for line in lines:
+            if (
+                line.request_id
+                and line.request_id.project_id
+                and line.request_id.project_id.account_id
+                and not line.analytic_distribution
+            ):
+                line.analytic_distribution = line.request_id.project_id._get_analytic_distribution()
+        return lines
 
     def do_cancel(self):
         """Actions to perform when cancelling a purchase request line."""

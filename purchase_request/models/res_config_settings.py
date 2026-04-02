@@ -13,3 +13,9 @@ class ResConfigSettings(models.TransientModel):
         help="Maximum number of Purchase Requests a Project Manager can create per week. "
         "Set to 0 for unlimited.",
     )
+    purchase_request_auto_activity = fields.Boolean(
+        string="Auto-create RFQ Activities",
+        config_parameter="purchase_request.auto_activity",
+        help="When enabled, activities will be created for all Purchase Officers "
+             "when a Purchase Request is approved, prompting them to create an RFQ.",
+    )

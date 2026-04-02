@@ -15,10 +15,12 @@
     'depends': ['base', 'project', 'purchase', 'account', 'analytic', 'mail'],
     'data': [
         'security/ir.model.access.csv',
+        'security/project_security.xml',
         'views/project_views.xml',
         'views/purchase_order_views.xml',
         'views/account_move_views.xml',
         'views/account_payment_views.xml',
+        'views/report_invoice.xml',
     ],
     'installable': True,
     'application': False,

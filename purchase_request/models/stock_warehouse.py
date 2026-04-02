@@ -16,13 +16,11 @@ class StockWarehouse(models.Model):
         "This user will only see PRs and picking types from warehouses they are assigned to.",
     )
     storekeeper_id = fields.Many2one(
-        comodel_name="res.users",
+        comodel_name="hr.employee",
         string="Storekeeper",
-        domain=lambda self: [
-            ("groups_id", "in", self.env.ref("purchase_request.group_purchase_request_viewer").id)
-        ],
         help="Storekeeper assigned to this warehouse. "
-        "This user has read-only access to PRs and restricted access to warehouse inventory.",
+        "This employee has read-only access to PRs and restricted access to warehouse inventory. "
+        "Note: The employee must have a linked user with Storekeeper access for record rules to work.",
     )
     project_id = fields.Many2one(
         comodel_name="project.project",

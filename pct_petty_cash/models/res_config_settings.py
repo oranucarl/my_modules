@@ -23,3 +23,10 @@ class ResConfigSettings(models.TransientModel):
         config_parameter='pct_petty_cash.notification_email',
         help="Email address to receive notifications when allocations or expenses are created.",
     )
+    petty_cash_expense_notification = fields.Boolean(
+        string='Expense Submission Notifications',
+        config_parameter='pct_petty_cash.expense_notification',
+        default=True,
+        help="When enabled, Petty Cash Accountants and Managers will receive "
+             "an OdooBot notification when a new expense is submitted.",
+    )
