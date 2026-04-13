@@ -1,24 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
-HR Employee Model Extensions for PCT HR Restriction
+from odoo import api, fields, models
 
-Design Decision: work_location_id is NOT made required
--------------------------------------------------------
-Originally considered making work_location_id required on hr.employee,
-but this was intentionally not implemented because:
 
-1. Employees without a work location should simply not be accessible
-   to Site HR Officers - they can only be managed by HR Managers.
+class HrEmployee(models.Model):
+    _inherit = 'hr.employee'
 
-2. This allows flexibility for:
-   - New employees not yet assigned to a location
-   - Employees in transition between locations
-   - Central/HQ employees who may not have a specific work location
+    state_of_origin = fields.Many2one(
+        'res.country.state',
+        string='State of Origin',
+        domain="[('country_id', '=?', country_id)]",
+        groups="hr.group_hr_user",
+        tracking=True,
+    )
 
-3. The record rules handle this correctly:
-   - HR Managers: Full access to ALL employees (with or without location)
-   - Site HR Officers: Access only to employees AT their assigned locations
-   - Employees without location: Only accessible by HR Managers
-
-This file is kept as documentation. No model changes are required.
-"""
+    @api.onchange('country_id')
+    def _onchange_country_id_state_of_origin(self):
+        """Clear state_of_origin when country changes"""
+        if self.state_of_origin and self.state_of_origin.country_id != self.country_id:
+            self.state_of_origin = False

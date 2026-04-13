@@ -42,6 +42,7 @@ When uninstalled, all modified record rules are reset to their original values.
         'security/security.xml',
         'security/ir.model.access.csv',
         'views/hr_work_location_views.xml',
+        'views/hr_employee_views.xml',
         'views/hr_employee_public_menu.xml',
     ],
     'installable': True,
