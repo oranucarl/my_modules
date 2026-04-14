@@ -12,7 +12,7 @@
     'author': "Packetclouds Technology",
     'website': "https://www.packetclouds.com",
     'license': 'LGPL-3',
-    'depends': ['base', 'project', 'purchase', 'account', 'analytic', 'mail'],
+    'depends': ['base', 'project', 'purchase', 'account', 'analytic', 'mail', 'product'],
     'data': [
         'security/ir.model.access.csv',
         'security/project_security.xml',
@@ -21,6 +21,7 @@
         'views/account_move_views.xml',
         'views/account_payment_views.xml',
         'views/report_invoice.xml',
+        'views/product_category_views.xml',
     ],
     'installable': True,
     'application': False,

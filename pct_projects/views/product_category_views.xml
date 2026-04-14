@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form view: Add reference_code below parent_id -->
+    <record id="product_category_form_view_inherit" model="ir.ui.view">
+        <field name="name">product.category.form.inherit.pct.projects</field>
+        <field name="model">product.category</field>
+        <field name="inherit_id" ref="product.product_category_form_view"/>
+        <field name="arch" type="xml">
+            <field name="parent_id" position="after">
+                <field name="reference_code"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- List view: Add reference_code with optional show -->
+    <record id="product_category_list_view_inherit" model="ir.ui.view">
+        <field name="name">product.category.list.inherit.pct.projects</field>
+        <field name="model">product.category</field>
+        <field name="inherit_id" ref="product.product_category_list_view"/>
+        <field name="arch" type="xml">
+            <field name="display_name" position="after">
+                <field name="reference_code" optional="show"/>
+            </field>
+        </field>
+    </record>
+</odoo>
