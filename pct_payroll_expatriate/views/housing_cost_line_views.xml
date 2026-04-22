@@ -9,6 +9,7 @@
                 <field name="date"/>
                 <field name="product_id"/>
                 <field name="name" optional="hide"/>
+                <field name="employee_ids" widget="many2many_tags" string="Assigned To" optional="show"/>
                 <field name="amount" widget="monetary"/>
                 <field name="currency_id" column_invisible="1"/>
             </list>

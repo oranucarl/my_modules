@@ -12,22 +12,34 @@ class ExpatriateHousing(models.Model):
         compute='_compute_name',
         store=True
     )
-    employee_id = fields.Many2one(
+    employee_ids = fields.Many2many(
         'hr.employee',
-        string='Employee',
+        'expatriate_housing_employee_rel',
+        'housing_id',
+        'employee_id',
+        string='Employees',
         required=True,
         tracking=True,
         domain="[('category_ids.is_expatriate', '=', True)]"
     )
+    employee_count = fields.Integer(
+        string='Employee Count',
+        compute='_compute_employee_count',
+        store=True
+    )
     location = fields.Char(
-        string='Location / Address',
+        string='Apartment Location',
         required=True
     )
     housing_type = fields.Char(
-        string='Type'
+        string='Apartment Type'
     )
-    renewal_date = fields.Date(
-        string='Date of Renewal',
+    contract_start_date = fields.Date(
+        string='Contract Start Date',
+        tracking=True
+    )
+    contract_end_date = fields.Date(
+        string='Contract End Date',
         tracking=True
     )
     days_to_expire = fields.Integer(
@@ -66,6 +78,9 @@ class ExpatriateHousing(models.Model):
     active = fields.Boolean(
         default=True
     )
+    available_assets = fields.Html(
+        string='Available Assets'
+    )
     notes = fields.Text(
         string='Notes'
     )
@@ -74,29 +89,41 @@ class ExpatriateHousing(models.Model):
         default=lambda self: self.env.company
     )
 
-    @api.depends('employee_id', 'location')
+    @api.depends('employee_ids', 'location')
     def _compute_name(self):
-        """Compute reference name from employee and location"""
+        """Compute reference name from employees and location"""
         for record in self:
-            emp_name = record.employee_id.name or ''
+            if record.employee_ids:
+                if len(record.employee_ids) == 1:
+                    emp_name = record.employee_ids[0].name
+                else:
+                    emp_name = f"{record.employee_ids[0].name} +{len(record.employee_ids) - 1}"
+            else:
+                emp_name = ''
             location = record.location or ''
             record.name = f"{emp_name} - {location}".strip(' -')
 
-    @api.depends('renewal_date')
-    def _compute_days_to_expire(self):
-        """Calculate days until renewal date"""
+    @api.depends('employee_ids')
+    def _compute_employee_count(self):
+        """Compute number of employees in housing"""
         for record in self:
-            if record.renewal_date:
-                delta = record.renewal_date - fields.Date.today()
+            record.employee_count = len(record.employee_ids)
+
+    @api.depends('contract_end_date')
+    def _compute_days_to_expire(self):
+        """Calculate days until contract end date"""
+        for record in self:
+            if record.contract_end_date:
+                delta = record.contract_end_date - fields.Date.today()
                 record.days_to_expire = delta.days
             else:
                 record.days_to_expire = 0
 
-    @api.depends('days_to_expire', 'renewal_date')
+    @api.depends('days_to_expire', 'contract_end_date')
     def _compute_alert_status(self):
         """Determine alert status based on days to expire"""
         for record in self:
-            if not record.renewal_date:
+            if not record.contract_end_date:
                 record.alert_status = False
             elif record.days_to_expire < 0:
                 record.alert_status = 'expired'

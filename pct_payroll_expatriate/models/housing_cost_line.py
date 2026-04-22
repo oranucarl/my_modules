@@ -11,6 +11,15 @@ class HousingCostLine(models.Model):
         required=True,
         ondelete='cascade'
     )
+    employee_ids = fields.Many2many(
+        'hr.employee',
+        'housing_cost_line_employee_rel',
+        'cost_line_id',
+        'employee_id',
+        string='Assigned Employees',
+        help='Leave empty to split cost among all housing occupants. '
+             'Select specific employees to assign cost only to them.'
+    )
     product_id = fields.Many2one(
         'product.product',
         string='Cost Item',

@@ -173,20 +173,52 @@
         <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
     </record>
 
-    <!-- expatriate.housing -->
+    <!-- expatriate.housing - Expatriate Payroll Manager -->
     <record id="rule_expatriate_housing" model="ir.rule">
-        <field name="name">Expatriate Housing: Expatriate Payroll Manager Only</field>
+        <field name="name">Expatriate Housing: Expatriate Payroll Manager</field>
         <field name="model_id" ref="model_expatriate_housing"/>
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
     </record>
 
-    <!-- housing.cost.line -->
+    <!-- expatriate.housing - Fleet Manager -->
+    <record id="rule_expatriate_housing_fleet_manager" model="ir.rule">
+        <field name="name">Expatriate Housing: Fleet Manager</field>
+        <field name="model_id" ref="model_expatriate_housing"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('fleet.fleet_group_manager'))]"/>
+    </record>
+
+    <!-- expatriate.housing - Fleet User (Manage all vehicles) -->
+    <record id="rule_expatriate_housing_fleet_user" model="ir.rule">
+        <field name="name">Expatriate Housing: Fleet User</field>
+        <field name="model_id" ref="model_expatriate_housing"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('fleet.fleet_group_user'))]"/>
+    </record>
+
+    <!-- housing.cost.line - Expatriate Payroll Manager -->
     <record id="rule_housing_cost_line" model="ir.rule">
-        <field name="name">Housing Cost Line: Expatriate Payroll Manager Only</field>
+        <field name="name">Housing Cost Line: Expatriate Payroll Manager</field>
         <field name="model_id" ref="model_housing_cost_line"/>
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('pct_payroll_expatriate.group_hr_payroll_expatriate'))]"/>
+    </record>
+
+    <!-- housing.cost.line - Fleet Manager -->
+    <record id="rule_housing_cost_line_fleet_manager" model="ir.rule">
+        <field name="name">Housing Cost Line: Fleet Manager</field>
+        <field name="model_id" ref="model_housing_cost_line"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('fleet.fleet_group_manager'))]"/>
+    </record>
+
+    <!-- housing.cost.line - Fleet User (Manage all vehicles) -->
+    <record id="rule_housing_cost_line_fleet_user" model="ir.rule">
+        <field name="name">Housing Cost Line: Fleet User</field>
+        <field name="model_id" ref="model_housing_cost_line"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('fleet.fleet_group_user'))]"/>
     </record>
 
     <!-- expatriate.document.type -->

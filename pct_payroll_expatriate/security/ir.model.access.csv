@@ -5,3 +5,9 @@ access_housing_cost_line_manager,housing.cost.line manager,model_housing_cost_li
 access_expatriate_document_type_manager,expatriate.document.type manager,model_expatriate_document_type,group_hr_payroll_expatriate,1,1,1,1
 access_expatriate_sponsor_manager,expatriate.sponsor.company manager,model_expatriate_sponsor_company,group_hr_payroll_expatriate,1,1,1,1
 access_housing_export_wizard,housing.export.wizard,model_housing_export_wizard,group_hr_payroll_expatriate,1,1,1,1
+access_expatriate_housing_fleet_manager,expatriate.housing fleet manager,model_expatriate_housing,fleet.fleet_group_manager,1,1,1,1
+access_housing_cost_line_fleet_manager,housing.cost.line fleet manager,model_housing_cost_line,fleet.fleet_group_manager,1,1,1,1
+access_housing_export_wizard_fleet_manager,housing.export.wizard fleet manager,model_housing_export_wizard,fleet.fleet_group_manager,1,1,1,1
+access_expatriate_housing_fleet_user,expatriate.housing fleet user,model_expatriate_housing,fleet.fleet_group_user,1,1,1,1
+access_housing_cost_line_fleet_user,housing.cost.line fleet user,model_housing_cost_line,fleet.fleet_group_user,1,1,1,1
+access_housing_export_wizard_fleet_user,housing.export.wizard fleet user,model_housing_export_wizard,fleet.fleet_group_user,1,1,1,1
