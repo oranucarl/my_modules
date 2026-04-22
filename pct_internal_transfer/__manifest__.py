@@ -13,7 +13,7 @@
     'author': "Carlson Oranu",
     'website': "https://www.packetclouds.com",
     'license': 'LGPL-3',
-    'depends': ['account'],
+    'depends': ['account', 'hr_expense'],
     'data': [
         'views/account_payment_views.xml',
     ],

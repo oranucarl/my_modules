@@ -20,6 +20,19 @@ class AccountPayment(models.Model):
         help="The bank/cash journal to transfer funds to."
     )
 
+    # Flag to identify expense-related payments
+    is_expense_payment = fields.Boolean(
+        string='Is Expense Payment',
+        compute='_compute_is_expense_payment',
+        store=True,
+    )
+
+    @api.depends('move_id', 'move_id.expense_sheet_id')
+    def _compute_is_expense_payment(self):
+        """Check if payment is related to an expense."""
+        for payment in self:
+            payment.is_expense_payment = bool(payment.move_id and payment.move_id.expense_sheet_id)
+
     @api.constrains('payment_type', 'destination_journal_id')
     def _check_destination_journal(self):
         for payment in self:
