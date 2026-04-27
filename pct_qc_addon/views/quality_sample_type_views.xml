@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Sample Type List View -->
+    <record id="quality_sample_type_view_tree" model="ir.ui.view">
+        <field name="name">quality.sample.type.list</field>
+        <field name="model">quality.sample.type</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Sample Type Form View -->
+    <record id="quality_sample_type_view_form" model="ir.ui.view">
+        <field name="name">quality.sample.type.form</field>
+        <field name="model">quality.sample.type</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Sample Type Search View -->
+    <record id="quality_sample_type_view_search" model="ir.ui.view">
+        <field name="name">quality.sample.type.search</field>
+        <field name="model">quality.sample.type</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Sample Type Action -->
+    <record id="quality_sample_type_action" model="ir.actions.act_window">
+        <field name="name">Sample Types</field>
+        <field name="res_model">quality.sample.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new sample type
+            </p>
+        </field>
+    </record>
+
+    <!-- Sample Type Menu (under Quality > Configuration) -->
+    <menuitem
+        id="menu_quality_sample_type"
+        name="Sample Types"
+        action="quality_sample_type_action"
+        parent="quality_control.menu_quality_configuration"
+        sequence="40"/>
+
+</odoo>

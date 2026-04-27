@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add Sample Type and Sample fields to quality.point form view -->
+    <record id="quality_point_view_form_inherit_samples" model="ir.ui.view">
+        <field name="name">quality.point.form.inherit.samples</field>
+        <field name="model">quality.point</field>
+        <field name="inherit_id" ref="quality.quality_point_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='team_id']" position="after">
+                <field name="sample_type_id" options="{'no_create': True}"/>
+                <field name="sample_id" options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

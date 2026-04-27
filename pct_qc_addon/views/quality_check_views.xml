@@ -1,13 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Add production_id to quality.check list view after operation_id -->
     <record id="quality_check_view_tree_inherit_production" model="ir.ui.view">
         <field name="name">quality.check.tree.inherit.production</field>
         <field name="model">quality.check</field>
         <field name="inherit_id" ref="quality_control.quality_check_view_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='operation_id']" position="after">
+            <!-- Add production_id after picking_id -->
+            <xpath expr="//field[@name='picking_id']" position="after">
                 <field name="production_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Add Sample Type and Sample to quality.check list view -->
+    <record id="quality_check_view_tree_inherit_samples" model="ir.ui.view">
+        <field name="name">quality.check.tree.inherit.samples</field>
+        <field name="model">quality.check</field>
+        <field name="inherit_id" ref="quality_control.quality_check_view_tree"/>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <!-- Add sample fields after production_id -->
+            <xpath expr="//field[@name='production_id']" position="after">
+                <field name="sample_type_id" optional="show"/>
+                <field name="sample_id" optional="show"/>
+            </xpath>
+            <!-- Change lot_ids to optional="hide" -->
+            <xpath expr="//field[@name='lot_ids']" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Add Sample Type and Sample to quality.check form view under product_id -->
+    <record id="quality_check_view_form_inherit_samples" model="ir.ui.view">
+        <field name="name">quality.check.form.inherit.samples</field>
+        <field name="model">quality.check</field>
+        <field name="inherit_id" ref="quality_control.quality_check_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="sample_type_id" readonly="1"/>
+                <field name="sample_id" readonly="1"/>
             </xpath>
         </field>
     </record>

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_quality_sample_type_user,quality.sample.type.user,model_quality_sample_type,quality.group_quality_user,1,0,0,0
+access_quality_sample_type_manager,quality.sample.type.manager,model_quality_sample_type,quality.group_quality_manager,1,1,1,1
+access_quality_sample_user,quality.sample.user,model_quality_sample,quality.group_quality_user,1,0,0,0
+access_quality_sample_manager,quality.sample.manager,model_quality_sample,quality.group_quality_manager,1,1,1,1
