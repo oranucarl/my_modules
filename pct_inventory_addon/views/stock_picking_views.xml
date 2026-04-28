@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ============================================== -->
+        <!-- STOCK PICKING FORM CUSTOMIZATIONS              -->
+        <!-- ============================================== -->
+
+        <record id="view_picking_form_customization" model="ir.ui.view">
+            <field name="name">stock.picking.form.pct.inventory</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="priority">160</field>
+            <field name="arch" type="xml">
+                <!-- Add Driver Name and Truck Number after origin -->
+                <xpath expr="//field[@name='origin']" position="after">
+                    <field name="driver_name" placeholder="e.g. John Doe"/>
+                    <field name="truck_number" placeholder="e.g. ABC-1234"/>
+                </xpath>
+
+                <!-- Exclude virtual locations from location_id (multi-locations, visible) -->
+                <xpath expr="//field[@name='location_id'][@groups='stock.group_stock_multi_locations'][not(@column_invisible)]" position="attributes">
+                    <attribute name="domain">[('usage', '!=', 'view')]</attribute>
+                </xpath>
+
+                <!-- Exclude virtual locations from location_dest_id (multi-locations, visible) -->
+                <xpath expr="//field[@name='location_dest_id'][@groups='stock.group_stock_multi_locations'][not(@column_invisible)]" position="attributes">
+                    <attribute name="domain">[('usage', '!=', 'view')]</attribute>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

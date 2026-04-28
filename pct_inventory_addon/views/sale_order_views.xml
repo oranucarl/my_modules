@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ============================================== -->
+        <!-- SALES ORDER LIST VIEW - SHOW STATUS COLUMNS   -->
+        <!-- ============================================== -->
+
+        <!-- Show invoice_status by default on SO list view -->
+        <record id="view_sale_order_tree_invoice_status" model="ir.ui.view">
+            <field name="name">sale.order.list.invoice.status.show</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.sale_order_tree"/>
+            <field name="arch" type="xml">
+                <field name="invoice_status" position="attributes">
+                    <attribute name="optional">show</attribute>
+                </field>
+            </field>
+        </record>
+
+        <!-- Show delivery_status by default on SO list view -->
+        <record id="view_sale_order_tree_delivery_status" model="ir.ui.view">
+            <field name="name">sale.order.list.delivery.status.show</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale_stock.view_order_tree"/>
+            <field name="arch" type="xml">
+                <field name="delivery_status" position="attributes">
+                    <attribute name="optional">show</attribute>
+                </field>
+            </field>
+        </record>
+
+    </data>
+</odoo>
